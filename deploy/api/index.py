@@ -65,8 +65,21 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _send_page(self):
+        data = (ROOT / "demo" / "web" / "index.html").read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
     def do_GET(self):
-        status, value = payload_for(urlsplit(self.path).path, "GET")
+        path = urlsplit(self.path).path
+        if not path.startswith("/api/") and path not in ("/health", "/replay", "/graph"):
+            self._send_page()
+            return
+        status, value = payload_for(path, "GET")
         self._send(status, value)
 
     def do_POST(self):
