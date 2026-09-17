@@ -91,6 +91,16 @@
     .fly-stage { position: relative; display: grid; min-height: 640px; place-items: center; overflow: hidden; }
     .fly-stage canvas { position: absolute; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; }
     #fly3d { inset: auto; left: 50%; top: 47%; z-index: 2; width: 640px; max-width: 100%; height: 580px; transform: translate(-50%, -50%); }
+    #brain3d { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; opacity: 0; transition: opacity .5s ease; }
+    .fly-stage.thinking #brain3d { opacity: 1; }
+    .fly-stage.thinking #brain { opacity: .25; }
+    #think-bars { position: absolute; left: 4%; bottom: 12%; z-index: 3; display: grid; gap: 5px; width: 30%; }
+    .think-bar { height: 7px; border-radius: 4px; background: rgba(74,58,36,.14); overflow: hidden; }
+    .think-bar i { display: block; height: 100%; width: 0; border-radius: 4px; background: linear-gradient(90deg, #3aa0e8, #7cc6f5); transition: width .45s ease; }
+    #think-readout { position: absolute; right: 4%; bottom: 12%; z-index: 3; display: grid; gap: 4px; max-width: 34%; color: #4a443c; font-size: 11px; font-weight: 600; text-align: right; }
+    #fly-decision { position: absolute; left: 50%; bottom: 2%; z-index: 4; width: min(92%, 430px); padding: 12px 16px; border-radius: 14px; background: #fbf7ef; box-shadow: 0 24px 34px -22px rgba(74,58,36,.5); transform: translateX(-50%); }
+    #fly-decision[hidden] { display: none; }
+    #fly-decision ul { margin: 6px 0 0; padding-left: 18px; font-size: 11px; color: #6b6257; }
     .fly-fallback { width: 100%; }
     .fly-stage::after { position: absolute; left: 50%; top: 47%; z-index: 1; width: 76%; aspect-ratio: 1; content: ""; pointer-events: none; border-radius: 50%; transform: translate(-50%, -50%); background: radial-gradient(closest-side, rgba(255,253,247,.8), rgba(255,253,247,0) 76%); }
     .fly-slot { position: relative; z-index: 2; display: grid; width: min(100%, 470px); min-height: 360px; place-items: center; }
@@ -561,6 +571,7 @@
         <div class="fly-stage">
           <canvas id="brain" aria-label="Constellation of connectome points behind the clay fly"></canvas>
           <canvas id="fly3d" width="470" height="430" aria-label="Clay fly in 3D"></canvas>
+          <canvas id="brain3d" aria-label="Point-cloud fly brain" hidden></canvas><div id="think-bars" aria-label="Sensory input energies"></div><div id="think-readout" aria-live="polite"></div><div id="fly-decision" hidden><strong id="fly-decision-title">FLY DECISION</strong><p id="fly-decision-verdict"></p><p id="fly-decision-confidence"></p><p id="fly-decision-why"></p><ul id="fly-decision-motion"></ul></div>
           <div class="fly-slot">
             <div class="fly-fallback" id="fly-fallback">
             <svg id="clayfly" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 460" width="520" height="460" role="img" aria-label="Clay fly">
@@ -1457,6 +1468,116 @@ resize: resize
     }
     window.addEventListener('resize', () => { resizeCanvas(); if (window.Clayfly3D && typeof window.Clayfly3D.resize === 'function') window.Clayfly3D.resize(); }); resizeCanvas(); loadGraph(); drawBrain();
     if (window.THREE && window.Clayfly3D && typeof window.Clayfly3D.init === 'function' && window.Clayfly3D.init(document.getElementById('fly3d'))) document.getElementById('fly-fallback').style.display = 'none';
+    function thinkColor(key, energy) { return energy; }
+    function buildBrainPoints() {
+      const canvas = document.querySelector('#brain3d');
+      if (canvas._brain) return true;
+      const graph = state.graph;
+      if (!window.THREE || !graph || !graph.points) return false;
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      const size = canvas.clientWidth || 470, height = canvas.clientHeight || 430;
+      renderer.setSize(size, height, false);
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(32, size / height, .1, 100);
+      camera.position.set(0, 0, 3.4);
+      const positions = new Float32Array(graph.points.flat());
+      const colors = new Float32Array(graph.points.length * 3);
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      const points = new THREE.Points(geo, new THREE.PointsMaterial({ size: .012, vertexColors: true, transparent: true, opacity: .9 }));
+      scene.add(points);
+      renderer.render(scene, camera);
+      canvas._brain = { renderer, scene, camera, points };
+      return true;
+    }
+    function lightBrain(energies) {
+      const brain = document.querySelector('#brain3d')._brain;
+      if (!brain) return;
+      const order = Object.keys(state.channelPoints || {});
+      const colors = brain.points.geometry.attributes.color;
+      const lit = new THREE.Color(), dim = new THREE.Color('#c9bda6');
+      for (let i = 0; i < colors.count; i++) {
+        let key = null;
+        for (const name of order) { if (state.channelPoints[name] && state.channelPoints[name].has(i)) { key = name; break; } }
+        const channelIndex = Math.max(0, order.indexOf(key));
+        const energy = Number((energies[SIGNAL_KEYS[channelIndex % SIGNAL_KEYS.length]] ?? .5));
+        lit.set('#f7c93c').lerp(new THREE.Color('#3aa0e8'), 1 - energy);
+        colors.setXYZ(i, dim.r + (lit.r - dim.r) * energy, dim.g + (lit.g - dim.g) * energy, dim.b + (lit.b - dim.b) * energy);
+      }
+      colors.needsUpdate = true;
+      brain.renderer.render(brain.scene, brain.camera);
+    }
+    function renderThinkFromResponse(row, think) {
+      const bars = document.querySelector('#think-bars'); bars.replaceChildren();
+      Object.entries(think.energies).forEach(([key, value]) => {
+        const bar = document.createElement('div'); bar.className = 'think-bar'; bar.dataset.key = key;
+        const fill = document.createElement('i'); bar.append(fill); bars.append(bar);
+        requestAnimationFrame(() => { fill.style.width = `${Math.round(value * 100)}%`; });
+      });
+      const readout = document.querySelector('#think-readout'); readout.replaceChildren();
+      const gen = (window._thinkGen = (window._thinkGen || 0) + 1);
+      think.reasons.forEach((line, i) => {
+        setTimeout(() => {
+          if (window._thinkGen !== gen) return;
+          const p = document.createElement('p'); p.className = 'think-line'; p.textContent = line;
+          readout.append(p);
+        }, 120 * i);
+      });
+      const verdict = `The fly says ${think.recommendation === 'WAIT' ? 'WAIT' : actionLabel(think.decision)} — confidence ${Math.round(think.confidence * 100)}%, ${think.confidence >= .5 ? 'above' : 'below'} threshold 50%`;
+      const why = `Why: ${think.reasons.slice(0, 2).join(' · ')}`;
+      const motion = think.recommendation === 'WAIT'
+        ? [`Step 1 — Find ICPs: companies in ${row.signal || 'adjacent spaces'}`, `Step 2 — Enrich: buyers ${row.title || 'unknown role'}`, `Step 3 — WAIT ${think.wait_days} days — attention contested, no send path`]
+        : [`Step 1 — Find ICPs: companies in ${row.signal || 'adjacent spaces'}`, `Step 2 — Enrich: buyers ${row.title || 'unknown role'}`, row.draft ? 'Step 3 — Draft ready, unsent, no recipient' : 'Step 3 — Motion: research → buyers → artifact → outreach, never auto-email'];
+      setTimeout(() => {
+        if (window._thinkGen !== gen) return;
+        document.querySelector('#fly-decision-verdict').textContent = verdict;
+        document.querySelector('#fly-decision-confidence').textContent = `Confidence ${Math.round(think.confidence * 100)}% · crowdedness ${think.crowdedness}`;
+        document.querySelector('#fly-decision-why').textContent = why;
+        const list = document.querySelector('#fly-decision-motion'); list.replaceChildren();
+        motion.forEach((line) => { const li = document.createElement('li'); li.textContent = line; list.append(li); });
+        document.querySelector('#fly-decision').hidden = false;
+        if (window.Clayfly3D && typeof window.Clayfly3D.setDecision === 'function') window.Clayfly3D.setDecision(think.recommendation === 'NO' ? 'NO' : 'YES');
+      }, 120 * think.reasons.length);
+    }
+    function renderThinkFromRow(row) {
+      const energies = effectiveSignals(row);
+      const confidence = Number(row.confidence || 0);
+      renderThinkFromResponse(row, {
+        energies,
+        recommendation: (row.decision || 'RESEARCH') === 'IGNORE' ? 'NO' : 'YES',
+        decision: row.decision || 'RESEARCH', confidence,
+        crowdedness: Object.values(energies).filter((v) => Number(v) > .6).length,
+        wait_days: 0,
+        reasons: Object.entries(energies).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([k, v]) => `Detected ${k} signal at ${Math.round(v * 100)}%`).concat([`Information value: ${confidence >= .75 ? 'HIGH' : confidence >= .5 ? 'MEDIUM' : 'LOW'}`])
+      });
+    }
+    async function runThinking() {
+      const button = document.querySelector('#think-run');
+      const row = state.selected || state.rows[0];
+      if (!row || !row.company) return;
+      Episode.stop();
+      document.querySelector('#episode-play').setAttribute('aria-pressed', 'false');
+      document.querySelector('#episode-play').textContent = 'Play episode';
+      button.disabled = true;
+      document.querySelector('.fly-stage').classList.add('thinking');
+      document.querySelector('#fly-decision').hidden = true;
+      buildBrainPoints();
+      try {
+        const response = await fetch('/api/demo/think', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ signals: effectiveSignals(row) }) });
+        const think = await response.json();
+        if (!response.ok) throw new Error(think.error || 'Think failed');
+        lightBrain(think.energies);
+        renderThinkFromResponse(row, think);
+      } catch (error) {
+        renderThinkFromRow(row);
+        document.querySelector('#fly-decision-verdict').textContent = 'The fly says ' + actionLabel(row.decision) + ' — recorded signals, sim offline';
+      } finally {
+        button.disabled = false;
+      }
+    }
+    document.querySelector('#think-run').addEventListener('click', runThinking);
     run('replay');
   </script>
   <script>
