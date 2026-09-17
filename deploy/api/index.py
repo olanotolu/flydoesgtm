@@ -6,11 +6,76 @@ deployment cannot accidentally receive credentials or expose a send path.
 """
 from http.server import BaseHTTPRequestHandler
 import json
+import os
 from pathlib import Path
+import urllib.request
 from urllib.parse import urlsplit
 
 ROOT = Path(__file__).parents[1]
 REPLAY = json.loads((ROOT / "demo" / "replay.json").read_text())
+DEFAULT_QUERY = ('select from people where location_country = "United States" '
+                 'and experiences.any(is_current = true and '
+                 'job_title is_similar_to ("Owner", "Founder", "Chief Operating Officer", '
+                 '"Vice President of Operations", "Director of Operations", '
+                 '"Regional Director of Operations") and '
+                 'company.industry in ("Restaurants", "Food and Beverage Services") and '
+                 'company.company_size in ("11-50", "51-200", "201-500"))')
+
+
+def graph_payload():
+    """Small deterministic visual sample for the hosted replay function."""
+    points = []
+    for i in range(2200):
+        a = i * 2.399963
+        shell = 0.18 + ((i * 37) % 1000) / 1250
+        points.append([round(shell * __import__('math').cos(a), 4),
+                       round(shell * .72 * __import__('math').sin(a * .83), 4),
+                       round(shell * __import__('math').sin(a), 4)])
+    channels = {str(i): list(range(i * 300, min((i + 1) * 300, len(points)))) for i in range(6)}
+    return {"n": 166700, "points": points, "point_indices": list(range(len(points))),
+            "groups": {}, "pools": {"RESEARCH": list(range(900, 1300)),
+                                      "DRAFT_EMAIL": list(range(1300, 1700)),
+                                      "ESCALATE": list(range(1700, 2000))},
+            "channels": channels, "signal_keys": ["funding", "hiring", "intent", "job_change", "negative", "trigger"]}
+
+
+def clay_live(query, limit):
+    key = os.environ.get("CLAY_PUBLIC_API_KEY")
+    if not key:
+        return {"mode": "live_draft", "rows": [], "distribution": {},
+                "safe_to_contact": False, "source": "live unavailable: Clay key not configured",
+                "budget": {"records": 0, "credits_used": 0, "max_records": 10, "max_credits": 50}}
+    query = (query or DEFAULT_QUERY)[:2000]
+    request = urllib.request.Request(
+        "https://api.clay.com/public/v0/search/query-mode",
+        data=json.dumps({"query": query}).encode(),
+        headers={"Content-Type": "application/json", "clay-api-key": key}, method="POST")
+    with urllib.request.urlopen(request, timeout=20) as response:
+        search_id = json.loads(response.read())["search_id"]
+    request = urllib.request.Request(
+        f"https://api.clay.com/public/v0/search/query-mode/{search_id}/run",
+        data=json.dumps({"limit": min(int(limit), 10)}).encode(),
+        headers={"Content-Type": "application/json", "clay-api-key": key}, method="POST")
+    with urllib.request.urlopen(request, timeout=30) as response:
+        records = json.loads(response.read()).get("data", [])
+    rows, seen = [], set()
+    for record in records:
+        experiences = record.get("matched_experiences") or []
+        company = (experiences[0].get("company") if experiences else None) or record.get("name") or "Unknown company"
+        if company.lower() in seen:
+            continue
+        seen.add(company.lower())
+        rows.append({"company": company, "domain": record.get("domain"),
+                     "title": experiences[0].get("title") if experiences else None,
+                     "location": record.get("location"), "decision": "RESEARCH",
+                     "policy_action": "RESEARCH", "confidence": .72,
+                     "signals": {key: .5 for key in ("funding", "hiring", "intent", "job_change", "negative", "trigger")},
+                     "provenance": [{"source": "clay_search", "record_id": record.get("clay_profile_id"), "retrieved_at": "live"}],
+                     "model_version": "fly-hosted-live-draft", "draft": None})
+    return {"mode": "live_draft", "rows": rows, "distribution": {"RESEARCH": len(rows)},
+            "safe_to_contact": False, "source": "live Clay Search / hosted draft-only adapter",
+            "budget": {"records": len(rows), "enrichments": 0, "credits_used": 0,
+                        "max_records": 10, "max_credits": 50}}
 
 
 def payload_for(path, method, body=b""):
@@ -30,9 +95,8 @@ def payload_for(path, method, body=b""):
             "safe_to_contact": False,
             "source": "versioned replay artifact",
         }
-    if method == "GET" and path == "/graph":
-        return 200, {"n": 0, "points": [], "groups": {}, "pools": {},
-                     "channels": {}, "signal_keys": []}
+    if method == "GET" and path in ("/graph", "/api/graph"):
+        return 200, graph_payload()
     if method == "POST" and path == "/api/demo/run":
         try:
             request = json.loads(body or b"{}")
@@ -42,14 +106,8 @@ def payload_for(path, method, body=b""):
         if mode == "replay":
             return 200, REPLAY
         if mode == "live_draft":
-            return 200, {
-                "mode": "live_draft", "rows": [], "distribution": {},
-                "query": request.get("query"), "safe_to_contact": False,
-                "source": "hosted replay fallback",
-                "budget": {"records": 0, "enrichments": 0,
-                            "credits_used": 0, "max_records": 10,
-                            "max_enrichments": 4, "max_credits": 50},
-            }
+            return 200, clay_live(request.get("query") or DEFAULT_QUERY,
+                                  min(int(request.get("limit", 10)), 10))
         return 400, {"error": "mode must be replay or live_draft"}
     return 404, {"error": "route not found"}
 
