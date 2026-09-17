@@ -50,15 +50,15 @@
     .status { display: inline-flex; align-items: center; gap: 7px; }
     .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
     main { max-width: 1540px; margin: 0 auto; padding: 40px 34px 60px; }
-    .intro { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr); gap: 48px; align-items: end; margin-bottom: 28px; }
+    .intro { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr); gap: 48px; align-items: end; margin-bottom: 20px; }
     .eyebrow { margin: 0 0 10px; color: var(--blue); font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
-    h1 { max-width: 700px; margin: 0; font-size: clamp(2rem, 4vw, 4.25rem); line-height: .98; letter-spacing: -.075em; font-weight: 710; }
+    h1 { max-width: 700px; margin: 0; font-size: clamp(2rem, 4vw, 3.55rem); line-height: .98; letter-spacing: -.075em; font-weight: 710; }
     .lede { max-width: 430px; margin: 0 0 3px; color: var(--muted); font-size: 1.02rem; line-height: 1.55; }
     .command { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 18px; padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
     .command input { min-width: 0; border: 0; background: transparent; color: var(--ink); padding: 8px 10px; font-family: var(--mono); font-size: 11px; }
     .command button { border: 0; border-radius: 9px; padding: 0 18px; background: var(--blue); color: white; font-weight: 740; font-size: 12px; }
     .command button:disabled { opacity: .55; cursor: wait; }
-    .workspace { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(370px, .85fr); gap: 18px; align-items: start; }
+    .workspace { display: grid; grid-template-columns: minmax(0, .82fr) minmax(540px, 1.18fr); gap: 18px; align-items: start; }
     .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
     .panel-head { display: flex; justify-content: space-between; gap: 20px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
     .panel-head h2 { margin: 0; font-size: 15px; letter-spacing: -.025em; }
@@ -71,7 +71,7 @@
     .stat:nth-child(2) strong { color: var(--blue); }
     .stat:nth-child(3) strong { color: var(--orange); }
     .stat:nth-child(4) strong { color: var(--green); }
-    .rows { max-height: 635px; overflow: auto; }
+    .rows { max-height: 570px; overflow: auto; }
     .row { display: grid; grid-template-columns: minmax(170px, 1.4fr) .8fr .8fr minmax(90px, .75fr) .85fr; gap: 14px; align-items: center; min-height: 78px; padding: 12px 20px; border-bottom: 1px solid var(--line); transition: background 150ms ease, transform 150ms ease; }
     .row:hover, .row[data-selected="true"] { background: var(--blue-soft); }
     .row:focus-visible { position: relative; z-index: 1; }
@@ -86,16 +86,28 @@
     .pill.escalate { background: color-mix(in oklch, var(--red) 10%, var(--surface)); color: var(--red); }
     .empty { padding: 42px 20px; color: var(--muted); text-align: center; line-height: 1.6; }
     .brain-panel { position: sticky; top: 18px; }
-    .brain-wrap { position: relative; height: 300px; background: oklch(23% .04 252); }
+    .brain-wrap { position: relative; height: 530px; overflow: hidden; background: radial-gradient(circle at 50% 48%, oklch(30% .06 252), oklch(18% .04 252) 72%); }
+    .brain-wrap::before { content: ""; position: absolute; inset: 12% 12%; border: 1px solid oklch(80% .04 245 / .14); border-radius: 50%; transform: scaleY(.48); pointer-events: none; }
+    .brain-wrap::after { content: ""; position: absolute; inset: 22% 5%; border: 1px solid oklch(80% .04 245 / .1); border-radius: 50%; transform: rotate(-22deg) scaleY(.35); pointer-events: none; }
+    .brain-toolbar { position: absolute; right: 18px; top: 16px; z-index: 2; display: flex; align-items: center; gap: 8px; color: oklch(76% .03 245); font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+    .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: oklch(83% .16 90); box-shadow: 0 0 13px oklch(83% .16 90); }
     canvas { display: block; width: 100%; height: 100%; }
     .brain-caption { position: absolute; left: 18px; top: 16px; color: oklch(91% .02 92); }
     .brain-caption .label { color: oklch(76% .04 245); }
     .brain-caption strong { display: block; margin-top: 8px; font-size: 20px; letter-spacing: -.04em; }
     .brain-caption span { color: oklch(76% .02 92); font-family: var(--mono); font-size: 10px; }
-    .brain-reading { position: absolute; right: 18px; bottom: 16px; color: oklch(91% .02 92); font-family: var(--mono); font-size: 10px; text-align: right; }
+    .brain-reading { position: absolute; right: 18px; bottom: 56px; color: oklch(91% .02 92); font-family: var(--mono); font-size: 10px; text-align: right; }
     .brain-reading strong { display: block; margin-top: 6px; color: oklch(83% .16 90); font-size: 22px; font-weight: 500; }
-    .brain-signal { position: absolute; left: 18px; bottom: 16px; max-width: 58%; color: oklch(78% .04 92); font-family: var(--mono); font-size: 9px; letter-spacing: .03em; text-transform: uppercase; }
+    .brain-signal { position: absolute; left: 18px; bottom: 56px; max-width: 58%; color: oklch(78% .04 92); font-family: var(--mono); font-size: 9px; letter-spacing: .03em; text-transform: uppercase; }
     .brain-signal strong { color: oklch(88% .15 90); font-weight: 600; }
+    .episode-strip { position: absolute; left: 18px; right: 18px; bottom: 16px; display: flex; align-items: center; gap: 8px; color: oklch(72% .03 245); font-family: var(--mono); font-size: 9px; text-transform: uppercase; }
+    .episode-line { flex: 1; height: 2px; overflow: hidden; background: oklch(80% .04 245 / .2); border-radius: 2px; }
+    .episode-line i { display: block; width: 48%; height: 100%; background: oklch(83% .16 90); box-shadow: 0 0 9px oklch(83% .16 90); }
+    .input-preview { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; margin-bottom: 18px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .input-preview .fly-chip { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; color: var(--ink); background: oklch(83% .16 90); font-size: 17px; }
+    .input-preview strong { display: block; font-size: 12px; }
+    .input-preview span { display: block; margin-top: 3px; color: var(--muted); font-family: var(--mono); font-size: 10px; }
+    .input-preview .preview-status { color: var(--blue); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
     .evidence { padding: 20px; }
     .evidence h3 { margin: 0 0 14px; font-size: 13px; }
     .timeline { display: grid; gap: 0; margin-bottom: 22px; }
@@ -117,7 +129,7 @@
     .notice { margin-top: 18px; padding: 11px 12px; color: var(--muted); background: var(--paper); border-left: 3px solid var(--blue); font-size: 11px; line-height: 1.5; }
     footer { display: flex; justify-content: space-between; gap: 20px; max-width: 1540px; margin: 0 auto; padding: 0 34px 24px; color: var(--quiet); font-family: var(--mono); font-size: 10px; }
     @media (max-width: 1050px) { .intro { grid-template-columns: 1fr; gap: 18px; } .workspace { grid-template-columns: 1fr; } .brain-panel { position: static; } }
-    @media (max-width: 680px) { header { height: auto; min-height: 66px; padding: 14px 18px; align-items: flex-start; gap: 14px; } .top-meta { flex-direction: column; align-items: flex-end; gap: 8px; } main { padding: 28px 14px 42px; } footer { padding: 0 14px 18px; flex-direction: column; gap: 8px; } h1 { font-size: 2.65rem; } .command { grid-template-columns: 1fr; } .command button { min-height: 44px; } .stats { grid-template-columns: repeat(2, 1fr); } .stat:nth-child(2) { border-right: 0; } .stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); } .row { grid-template-columns: 1fr auto; gap: 8px 14px; padding: 15px 16px; } .row > .cell:nth-child(2), .row > .cell:nth-child(3), .row > .cell:nth-child(4) { display: none; } .row > .cell:last-child { justify-self: end; } .brain-wrap { height: 240px; } .provenance-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 680px) { header { height: auto; min-height: 66px; padding: 14px 18px; align-items: flex-start; gap: 14px; } .top-meta { flex-direction: column; align-items: flex-end; gap: 8px; } main { padding: 28px 14px 42px; } footer { padding: 0 14px 18px; flex-direction: column; gap: 8px; } h1 { font-size: 2.65rem; } .command { grid-template-columns: 1fr; } .command button { min-height: 44px; } .input-preview { grid-template-columns: auto 1fr; } .input-preview .preview-status { grid-column: 2; } .stats { grid-template-columns: repeat(2, 1fr); } .stat:nth-child(2) { border-right: 0; } .stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); } .row { grid-template-columns: 1fr auto; gap: 8px 14px; padding: 15px 16px; } .row > .cell:nth-child(2), .row > .cell:nth-child(3), .row > .cell:nth-child(4) { display: none; } .row > .cell:last-child { justify-self: end; } .brain-wrap { height: 390px; } .provenance-grid { grid-template-columns: 1fr; } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
   </style>
 </head>
@@ -130,9 +142,10 @@
   <main id="main-content">
     <section class="intro"><div><p class="eyebrow">Clay signal orchestration / 2026.09</p><h1>Let the fly decide what deserves a closer look.</h1></div><p class="lede">A connectome-constrained policy reads public GTM signals, spends research only when the account earns it, and leaves an unsent draft with its evidence.</p></section>
     <form class="command" id="run-form"><label class="sr-only" for="clay-query">Clay Search query</label><input id="clay-query" autocomplete="off" spellcheck="false"><button id="run-button" type="submit">Run draft-only pass</button></form>
+    <div class="input-preview" aria-live="polite"><div class="fly-chip" aria-hidden="true">✳</div><div><strong id="preview-company">Feed the fly a company</strong><span id="preview-signals">Clay Search signals will become the episode input</span></div><span class="preview-status" id="preview-status">AWAITING INPUT</span></div>
     <section class="workspace">
       <section class="panel" aria-labelledby="queue-title"><div class="panel-head"><div><h2 id="queue-title">Account queue</h2><p id="queue-subtitle">Recorded showcase / deterministic replay</p></div><span class="label" id="queue-label">READ-ONLY</span></div><div class="stats"><div class="stat"><span class="label">Evaluated</span><strong id="accounts">0</strong></div><div class="stat"><span class="label">Research</span><strong id="researches">0</strong></div><div class="stat"><span class="label">Drafts</span><strong id="drafts">0</strong></div><div class="stat"><span class="label">Ignored</span><strong id="ignores">0</strong></div></div><div class="rows" id="rows" aria-live="polite"><div class="empty">Loading the versioned proof record…</div></div></section>
-      <aside class="panel brain-panel" aria-labelledby="evidence-title"><div class="brain-wrap"><canvas id="brain" aria-label="Animated connectome diagnostic with selected prospect signal lights"></canvas><div class="brain-caption"><span class="label">DIAGNOSTIC SIGNATURE</span><strong>MaleCNS v1.0</strong><span id="neuron-count">connectome loading…</span></div><div class="brain-signal" id="brain-signal">Select an account · signal path idle</div><div class="brain-reading">TRACE ACTIVITY<strong id="activity">0.00</strong></div></div><div class="evidence"><h3 id="evidence-title">Decision evidence</h3><div class="timeline" id="timeline"><div class="empty">Select an account to inspect its path.</div></div><div class="draft" id="draft" hidden><span class="label">Unsent artifact</span><h4 id="draft-title">Draft not generated</h4><p id="draft-copy">The live-draft mode can create copy, but never a recipient or send action.</p></div><div class="provenance"><span class="label">Model and provenance</span><div class="provenance-grid"><div class="prov-item"><span class="label">Model</span><strong id="model-version">—</strong></div><div class="prov-item"><span class="label">Source</span><strong id="source-id">—</strong></div><div class="prov-item"><span class="label">Credits</span><strong id="credit-use">—</strong></div><div class="prov-item"><span class="label">State</span><strong id="contact-state">NO SEND PATH</strong></div></div></div><div class="notice" id="notice">Recorded proof is the default. Live Clay mode is capped at 10 records and produces drafts only.</div></div></aside>
+      <aside class="panel brain-panel" aria-labelledby="evidence-title"><div class="brain-wrap"><canvas id="brain" aria-label="Animated connectome diagnostic with selected prospect signal lights"></canvas><div class="brain-toolbar"><span class="pulse-dot" aria-hidden="true"></span><span>episode / live trace</span></div><div class="brain-caption"><span class="label">THE FLY REVIEWS</span><strong>One company</strong><span id="neuron-count">connectome loading…</span></div><div class="brain-signal" id="brain-signal">Select an account · signal path idle</div><div class="brain-reading">TRACE ACTIVITY<strong id="activity">0.00</strong></div><div class="episode-strip"><span>input</span><div class="episode-line"><i></i></div><span>decision</span></div></div><div class="evidence"><h3 id="evidence-title">Decision evidence</h3><div class="timeline" id="timeline"><div class="empty">Select an account to inspect its path.</div></div><div class="draft" id="draft" hidden><span class="label">Unsent artifact</span><h4 id="draft-title">Draft not generated</h4><p id="draft-copy">The live-draft mode can create copy, but never a recipient or send action.</p></div><div class="provenance"><span class="label">Model and provenance</span><div class="provenance-grid"><div class="prov-item"><span class="label">Model</span><strong id="model-version">—</strong></div><div class="prov-item"><span class="label">Source</span><strong id="source-id">—</strong></div><div class="prov-item"><span class="label">Credits</span><strong id="credit-use">—</strong></div><div class="prov-item"><span class="label">State</span><strong id="contact-state">NO SEND PATH</strong></div></div></div><div class="notice" id="notice">Recorded proof is the default. Live Clay mode is capped at 10 records and produces drafts only.</div></div></aside>
     </section>
   </main>
   <footer><span id="event">Booting recorded proof…</span><span>Fly Brain × Clay / unsent by construction</span></footer>
@@ -175,6 +188,9 @@
       state.actionGlow = row.decision === 'DRAFT_EMAIL' ? .95 : row.decision === 'ESCALATE' ? .85 : row.decision === 'IGNORE' ? .55 : .72;
       const lit = SIGNAL_KEYS.filter(key => state.signalEnergy[key] > .6);
       $('#brain-signal').replaceChildren(text('span', `${lit.length ? lit.join(' · ') : 'thin signals'} → `), text('strong', actionLabel(row.decision)));
+      $('#preview-company').textContent = row.company || 'Unknown company';
+      $('#preview-signals').textContent = `${row.title || 'Public professional role'} · ${row.location || 'Location not reported'} · ${row.provenance?.[0]?.source || 'recorded proof'}`;
+      $('#preview-status').textContent = `FLY SAYS ${actionLabel(row.decision)}`;
     }
     function replayRows(payload) {
       if (Array.isArray(payload.rows)) return payload.rows;
@@ -182,7 +198,7 @@
     }
     async function run(mode) {
       state.mode = mode; $('#status-text').textContent = mode === 'replay' ? 'RECORDED' : 'LIVE / DRAFT-ONLY'; $('#run-button').disabled = true; $('#run-button').textContent = mode === 'replay' ? 'Loading proof…' : 'Running capped pass…'; $('#event').textContent = mode === 'replay' ? 'Loading versioned proof…' : 'Querying Clay read-only…';
-      try { const response = await fetch('/api/demo/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode, query: $('#clay-query').value, limit: 10 }) }); const payload = await response.json(); if (!response.ok) throw new Error(payload.error || 'Run failed'); state.rows = replayRows(payload); state.model_version = payload.model_version || state.rows[0]?.model_version; renderStats(state.rows); renderRows(state.rows); $('#queue-subtitle').textContent = mode === 'replay' ? 'Recorded showcase / deterministic replay' : 'Live Clay data / enrichment and drafts only'; $('#queue-label').textContent = mode === 'replay' ? 'READ-ONLY' : 'NO SEND'; $('#notice').textContent = mode === 'replay' ? 'This is a recorded proof path. It makes no network calls after loading.' : `Live Clay pass capped at ${payload.budget?.max_records || 10} records and ${payload.budget?.max_credits || 50} credits. No recipient or send action is created.`; $('#event').textContent = `${state.rows.length} records / ${mode === 'replay' ? 'replay' : 'draft-only'}`; } catch (error) { $('#event').textContent = 'Run unavailable; showing the safe empty state.'; $('#rows').replaceChildren(text('div', 'We could not reach the configured source. No action was taken.', 'empty')); } finally { $('#run-button').disabled = false; $('#run-button').textContent = 'Run draft-only pass'; }
+      try { const response = await fetch('/api/demo/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode, query: $('#clay-query').value, limit: 10 }) }); const payload = await response.json(); if (!response.ok) throw new Error(payload.error || 'Run failed'); state.rows = replayRows(payload); state.model_version = payload.model_version || state.rows[0]?.model_version; renderStats(state.rows); renderRows(state.rows); $('#queue-subtitle').textContent = mode === 'replay' ? 'Recorded showcase / deterministic replay' : 'Live Clay data / enrichment and drafts only'; $('#queue-label').textContent = mode === 'replay' ? 'READ-ONLY' : 'NO SEND'; $('#notice').textContent = mode === 'replay' ? 'This is a recorded proof path. It makes no network calls after loading.' : `Live Clay pass capped at ${payload.budget?.max_records || 10} records and ${payload.budget?.max_credits || 50} credits. No recipient or send action is created.`; $('#event').textContent = `${state.rows.length} records / ${mode === 'replay' ? 'replay' : 'live Clay episode'}`; } catch (error) { $('#event').textContent = 'Run unavailable; showing the safe empty state.'; $('#rows').replaceChildren(text('div', 'We could not reach the configured source. No action was taken.', 'empty')); } finally { $('#run-button').disabled = false; $('#run-button').textContent = 'Run draft-only pass'; }
     }
     $('#replay-mode').addEventListener('click', () => { $('#replay-mode').setAttribute('aria-pressed', 'true'); $('#live-mode').setAttribute('aria-pressed', 'false'); run('replay'); }); $('#live-mode').addEventListener('click', () => { $('#replay-mode').setAttribute('aria-pressed', 'false'); $('#live-mode').setAttribute('aria-pressed', 'true'); run('live_draft'); }); $('#run-form').addEventListener('submit', (event) => { event.preventDefault(); run(state.mode); });
     const canvas = $('#brain'), ctx = canvas.getContext('2d');

@@ -65,9 +65,12 @@ def clay_live(query, limit):
         if company.lower() in seen:
             continue
         seen.add(company.lower())
+        location = record.get("location")
+        if isinstance(location, dict):
+            location = location.get("name") or ", ".join(str(location.get(key)) for key in ("city", "state", "country") if location.get(key))
         rows.append({"company": company, "domain": record.get("domain"),
                      "title": experiences[0].get("title") if experiences else None,
-                     "location": record.get("location"), "decision": "RESEARCH",
+                     "location": location, "decision": "RESEARCH",
                      "policy_action": "RESEARCH", "confidence": .72,
                      "signals": {key: .5 for key in ("funding", "hiring", "intent", "job_change", "negative", "trigger")},
                      "provenance": [{"source": "clay_search", "record_id": record.get("clay_profile_id"), "retrieved_at": "live"}],
