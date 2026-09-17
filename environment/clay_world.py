@@ -110,6 +110,8 @@ class World:
         # for benchmark reporting so training shaping stays out of it.
         self.credit = {}
         self.econ = {}
+        self._credit_events = []
+        self._econ_events = []
         self.pending = []          # (resolve_day, slot, reward)
         self.day_slots = []        # slots used today (dividend split)
         self.spend_today = 0.0
@@ -118,6 +120,31 @@ class World:
             "closed": 0, "unsubscribes": 0, "spam": 0,
             "emails": 0, "escalations": 0, "researches": 0,
             "enriches": 0, "spent": 0.0,
+        }
+
+    def _add_ledger(self, slot, credit_amount, econ_amount=None):
+        """Add one auditable event to the shaped and pure-economics ledgers."""
+        slot = int(slot)
+        credit_amount = float(credit_amount)
+        econ_amount = credit_amount if econ_amount is None else float(econ_amount)
+        self.credit[slot] = self.credit.get(slot, 0.0) + credit_amount
+        self.econ[slot] = self.econ.get(slot, 0.0) + econ_amount
+        self._credit_events.append((slot, credit_amount))
+        self._econ_events.append((slot, econ_amount))
+
+    def ledger_invariants(self, *, atol=1e-5):
+        """Return conservation checks for every settled ledger event."""
+        credit_expected = sum(amount for _, amount in self._credit_events)
+        econ_expected = sum(amount for _, amount in self._econ_events)
+        return {
+            "credit_conserved": bool(np.isclose(
+                sum(self.credit.values()), credit_expected, atol=atol)),
+            "econ_conserved": bool(np.isclose(
+                sum(self.econ.values()), econ_expected, atol=atol)),
+            "credit_total": float(sum(self.credit.values())),
+            "econ_total": float(sum(self.econ.values())),
+            "credit_events": len(self._credit_events),
+            "econ_events": len(self._econ_events),
         }
 
     # ---------------- regime schedule ----------------
@@ -210,7 +237,7 @@ class World:
                                         - self.spend_today)
             share = div / len(self.day_slots)
             for s in self.day_slots:
-                self.credit[s] = self.credit.get(s, 0.0) + share
+                self._add_ledger(s, share, 0.0)
         self.day_slots = []
         self.spend_today = 0.0
 
@@ -224,8 +251,7 @@ class World:
         still = []
         for resolve_day, slot, reward in self.pending:
             if resolve_day <= day:
-                self.credit[slot] = self.credit.get(slot, 0.0) + reward
-                self.econ[slot] = self.econ.get(slot, 0.0) + reward
+                self._add_ledger(slot, reward)
             else:
                 still.append((resolve_day, slot, reward))
         self.pending = still
@@ -251,17 +277,16 @@ class World:
         for i in np.where(expired)[0]:
             slot = int(self.last_slot[i])
             if slot >= 0:
-                self.credit[slot] = \
-                    self.credit.get(slot, 0.0) + self.outcome_reward["expired"]
-                self.econ[slot] = \
-                    self.econ.get(slot, 0.0) + self.outcome_reward["expired"]
+                self._add_ledger(slot, self.outcome_reward["expired"])
             self.active[i] = False
 
     def apply(self, day, idxs, actions, slot_of):
         """Apply one action per active account. `slot_of(k)` maps the k-th
-        decision to a global credit slot. Returns nothing; rewards land in
-        self.credit (immediate) and self.pending (delayed)."""
+        decision to a global credit slot. Rewards land in self.credit
+        (immediate) and self.pending (delayed). Returns the actually
+        executed actions, including budget fallbacks to WAIT."""
         rng = self.rng
+        executed = np.empty(len(idxs), dtype=np.int64)
         for k, i in enumerate(idxs):
             a = int(actions[k])
             slot = slot_of(k)
@@ -272,13 +297,15 @@ class World:
             if self.spend_today + cost > self.daily_budget:
                 a = WAIT  # can't afford -> forced inaction
                 cost = self.costs[WAIT]
+            executed[k] = a
 
             self.spend_today += cost
             self.stats["spent"] += cost
-            self.credit[slot] = self.credit.get(slot, 0.0) \
-                + ACTION_PENALTY[a] - self.lambda_cost * cost
-            self.econ[slot] = self.econ.get(slot, 0.0) \
-                + ACTION_PENALTY[a]
+            self._add_ledger(
+                slot,
+                ACTION_PENALTY[a] - self.lambda_cost * cost,
+                ACTION_PENALTY[a],
+            )
 
             if a == WAIT or a == OBSERVE:
                 if a == OBSERVE:
@@ -298,6 +325,7 @@ class World:
                 self.active[i] = False
             elif a in (EMAIL, ESCALATE):
                 self._outreach(day, i, slot, escalate=(a == ESCALATE))
+        return executed
 
     def _outreach(self, day, i, slot, escalate):
         rng = self.rng
@@ -386,9 +414,11 @@ class World:
                                         - self.spend_today)
             share = div / len(self.day_slots)
             for s in self.day_slots:
-                self.credit[s] = self.credit.get(s, 0.0) + share
+                self._add_ledger(s, share, 0.0)
         self.day_slots = []
         for _, slot, reward in self.pending:
-            self.credit[slot] = self.credit.get(slot, 0.0) + reward
-            self.econ[slot] = self.econ.get(slot, 0.0) + reward
+            self._add_ledger(slot, reward)
         self.pending = []
+        checks = self.ledger_invariants()
+        if not checks["credit_conserved"] or not checks["econ_conserved"]:
+            raise RuntimeError(f"ledger conservation failed: {checks}")

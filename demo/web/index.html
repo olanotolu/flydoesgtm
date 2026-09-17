@@ -1,25 +1,187 @@
 <!doctype html>
-<meta charset="utf-8">
-<title>the fly got a job at clay</title>
-<style>
-:root{--bg:#0c0d0f;--panel:#141619;--line:#2a2d31;--muted:#858b91;--ink:#f1f2ee;--acid:#c8f169;--orange:#ff9a62;--red:#ff6b72;--blue:#82c9ff}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:12px ui-monospace,SFMono-Regular,Menlo,monospace}header{height:68px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 26px;justify-content:space-between}h1{font:600 19px Arial,sans-serif;letter-spacing:-.7px;margin:0}h1 span{color:var(--acid)}.sub{color:var(--muted);font-size:10px;margin-top:5px}.status{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:10px}.dot{width:7px;height:7px;background:var(--acid);border-radius:50%;box-shadow:0 0 10px var(--acid);animation:blink 2.4s infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:.45}}main{display:grid;grid-template-columns:43% 57%;height:calc(100vh - 68px);min-height:650px}.brain{position:relative;border-right:1px solid var(--line);background:radial-gradient(ellipse at center,#181c1b 0,#0c0d0f 67%);overflow:hidden}.brain canvas{width:100%;height:100%}.hud{position:absolute;left:24px;top:22px}.meta{color:var(--muted);line-height:1.8;margin-top:10px}.meta b{color:var(--ink);font-weight:400}.activity{position:absolute;bottom:22px;left:24px;color:var(--muted)}.activity b{color:var(--acid);font-size:18px}.table{background:#101113;overflow:hidden;position:relative;display:flex;flex-direction:column}.toolbar{height:54px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0}.live-controls{display:flex;gap:8px;align-items:center;margin-left:auto;width:100%;justify-content:flex-end}.live-controls input{background:rgba(244,239,228,.045);border:1px solid var(--line);color:var(--ink);font:inherit;padding:8px 10px;flex:1;max-width:560px;outline:none}.live-controls input:focus{border-color:var(--acid)}.toolbar button.go{border:1px solid #4c5635;background:#20271a;color:var(--acid);font:inherit;padding:8px 12px;cursor:pointer}.toolbar button.go:hover{background:#2a341d}.toolbar button.go:disabled{opacity:.45;cursor:wait}.stats{display:flex;border-bottom:1px solid var(--line);height:72px;flex-shrink:0}.stat{padding:14px 20px;border-right:1px solid var(--line);flex:1}.stat label{color:var(--muted);display:block;font-size:9px;margin-bottom:8px}.stat b{font-size:17px;font-weight:400}.stat b.email{color:var(--acid)}.stat b.research{color:var(--blue)}.stat b.ignore{color:var(--muted)}.tablehead,.row{display:grid;grid-template-columns:1.25fr .65fr .75fr 1.4fr .7fr .8fr;gap:0;align-items:center}.tablehead{height:32px;color:var(--muted);font-size:9px;border-bottom:1px solid var(--line);padding:0 20px;flex-shrink:0}.rows{overflow-y:auto;flex:1}.row{min-height:68px;border-bottom:1px solid #202226;padding:0 20px;transition:background .2s;cursor:pointer}.row:hover{background:#1a1d20}.row.selected{background:#1b2116;box-shadow:inset 3px 0 0 var(--acid)}.row.stream-in{animation:streamin .5s ease-out}@keyframes streamin{0%{opacity:0;transform:translateX(14px)}100%{opacity:1;transform:none}}.company{font:bold 12px Arial,sans-serif}.domain{display:block;color:var(--muted);font-size:9px;margin-top:5px;font-weight:400}.signal{color:#c2c6c9;font-size:10px;line-height:1.4}.pill{display:inline-block;padding:4px 6px;border:1px solid var(--line);font-size:9px}.pill.green{color:var(--acid);border-color:#596b34}.action{font-weight:bold;color:var(--acid)}.action.wait{color:var(--muted)}.action.research{color:var(--blue)}.action.ignore{color:var(--red)}.drawer{border-top:1px solid var(--line);background:#121417;flex-shrink:0;max-height:0;overflow:hidden;transition:max-height .35s ease;display:flex;flex-direction:column}.drawer.open{max-height:262px}.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--line);flex-shrink:0}.drawer-head b{font:bold 12px Arial,sans-serif}.drawer-head span{color:var(--muted);font-size:10px}.drawer-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;padding:14px 20px;overflow-y:auto}.panel{padding:0 18px;border-right:1px solid var(--line)}.panel:last-child{border-right:0}.panel h4{margin:0 0 10px;color:var(--muted);font-size:9px;letter-spacing:.12em}.hbar{display:grid;grid-template-columns:76px 1fr 38px;align-items:center;gap:8px;margin-bottom:6px;font-size:10px}.hbar span:first-child{color:var(--muted)}.hbar span:last-child{color:var(--ink);text-align:right}.track{height:7px;background:#1d2023;position:relative}.fill{position:absolute;inset:0 auto 0 0;background:var(--muted);transition:width .4s}.fill.acid{background:var(--acid)}.fill.blue{background:var(--blue)}.fill.dim{background:#4a4f54}.poolrow{display:flex;justify-content:space-between;font-size:10px;margin-bottom:5px}.poolrow span:first-child{color:var(--muted)}.poolrow.hot span:last-child{color:var(--orange)}.compare{display:flex;gap:10px;align-items:center;margin-top:8px}.compare .badge{border:1px solid var(--line);padding:6px 10px;font-size:10px}.compare .badge.pre{color:var(--muted)}.compare .badge.post{color:var(--acid);border-color:#596b34}.footer{padding:8px 20px;color:var(--muted);font-size:10px;border-top:1px solid var(--line);flex-shrink:0;display:flex;justify-content:space-between}@media(max-width:900px){main{grid-template-columns:1fr}.brain{height:45vh;border-right:0;border-bottom:1px solid var(--line)}.table{height:55vh}.tablehead,.row{min-width:760px}.rows{overflow-x:auto}}
-</style>
-<header><div><h1>the fly got a job at <span>clay</span></h1><div class="sub">166,700 neurons. zero SDRs.</div></div><div class="status"><i class="dot"></i> LIVE</div></header>
-<main><section class="brain"><canvas id="brain"></canvas><div class="hud"><div class="meta"><b style="color:var(--acid)">MALECNS V1.0</b><br>166,700 neurons<br><b id="soma">—</b> soma rendered</div></div><div class="activity">ACTIVITY <b id="activity">0.00</b></div></section><section class="table"><div class="toolbar"><div class="live-controls"><input id="clay-query" value='select from companies where industry = "Software Development"' placeholder='industry = "Wineries" — or just type plain text' spellcheck="false"><button id="clay-search" class="go">SEARCH</button></div></div><div class="stats"><div class="stat"><label>EVALUATED</label><b id="accounts">0</b></div><div class="stat"><label>EMAIL</label><b id="emails" class="email">0</b></div><div class="stat"><label>RESEARCH</label><b id="researches" class="research">0</b></div><div class="stat"><label>IGNORE</label><b id="ignores" class="ignore">0</b></div></div><div class="tablehead"><span>COMPANY</span><span>SIZE</span><span>FUNDING</span><span>SIGNAL</span><span>CONF</span><span>ACTION</span></div><div class="rows" id="rows"></div><div class="drawer" id="drawer"><div class="drawer-head"><b id="drawer-company">—</b><button id="compare-btn" class="go" style="padding:5px 10px;font-size:10px">COMPARE</button></div><div class="drawer-body"><div class="panel"><h4>SIGNALS</h4><div id="sig-bars"></div></div><div class="panel"><h4>P(ACTION)</h4><div id="act-bars"></div></div><div class="panel"><h4>POOLS / COST</h4><div id="pool-rows"></div><div id="cost-line" style="margin-top:8px;color:var(--muted);font-size:10px"></div><div class="compare" id="compare-out"></div></div></div></div><div class="footer"><span id="event">loading connectome…</span><span>clay public api · read-only</span></div></section></main>
-<script>
-const $=s=>document.querySelector(s);const canvas=$('#brain'),ctx=canvas.getContext('2d');let pts=[],activity=0,step=0,rot=0,playing=false,highlightChannels=new Set(),highlightPool=new Set(),idxMap=new Map(),graph=null;
-function size(){canvas.width=canvas.clientWidth*devicePixelRatio;canvas.height=canvas.clientHeight*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}
-async function loadBrain(){try{graph=await fetch('/graph').then(r=>r.json());const max=Math.min(24000,graph.points.length);pts=graph.points.slice(0,max).map((p,i)=>({x:p[0],y:p[1],z:p[2],phase:(i%97)*.11,id:graph.point_indices[i]}));graph.point_indices.slice(0,max).forEach((id,i)=>idxMap.set(id,i));$('#soma').textContent=max.toLocaleString()}catch(e){pts=[]}}
-function draw(){let w=canvas.clientWidth,h=canvas.clientHeight;ctx.clearRect(0,0,w,h);rot+=.0028;step+=.5;let c=Math.cos(rot),s=Math.sin(rot),hot=playing?Math.min(1,activity+.15):.05+.03*Math.sin(step*.008);const projected=[];for(const p of pts){const x=p.x*c-p.z*s,z=p.x*s+p.z*c+2.3,scale=1.35/z;projected.push({x:w/2+x*scale*w*.8,y:h/2-p.y*scale*h*.8,z,scale,p})}projected.sort((a,b)=>b.z-a.z);ctx.globalCompositeOperation='lighter';for(const q of projected){const pulse=(Math.sin(step*.045+q.p.phase)+1)/2,glow=.3+pulse*(.3+hot*.7),a=glow*(.3+.7*(1-q.z/4));const hiC=highlightChannels.has(q.p.id),hiP=highlightPool.has(q.p.id);let r=Math.max(.6,(1.1+pulse*(.8+hot*1.8))*q.scale*2.8);if(hiC||hiP){r*=2.5;ctx.fillStyle=hiP?`rgba(255,154,98,${Math.min(1,a+.35)})`:`rgba(200,241,105,${Math.min(1,a+.35)})`}else{const g=Math.floor(140+pulse*70);ctx.fillStyle=`rgba(${Math.floor(g*.68)},${g},${Math.floor(g*.6)},${Math.min(1,a*1.5)})`}ctx.beginPath();ctx.arc(q.x,q.y,r,0,7);ctx.fill()}ctx.globalCompositeOperation='source-over';requestAnimationFrame(draw)}
-function setHighlight(row){highlightChannels.clear();highlightPool.clear();if(!row||!graph)return;const ca=row.channel_activity||{};const top=Object.entries(ca).slice(0,6).sort((a,b)=>b[1]-a[1]).slice(0,2);for(const[ch,val]of top){if(val<=0)continue;for(const id of graph.channels[ch]||[]){const i=idxMap.get(id);if(i!==undefined)highlightChannels.add(graph.point_indices[i])}}const pool=row.decision&&graph.pools[row.decision];if(pool)for(const id of pool){const i=idxMap.get(id);if(i!==undefined)highlightPool.add(graph.point_indices[i])}}
-function rowHTML(d){return `<div class="company">${d.company||'—'}<small class="domain">${d.domain||''}</small></div><span>${d.employees||'—'}</span><span class="pill ${String(d.funding).includes('unknown')?'':'green'}">${d.funding||'—'}</span><span class="signal">${d.signal||'—'}</span><span class="pill">${d.conf||'—'}</span><span class="action ${(d.action==='WAIT'||d.action==='IGNORE')?'wait':''} ${d.action==='RESEARCH'?'research':''} ${d.action==='IGNORE'?'ignore':''}">${d.action||'—'}</span>`}
-function renderRow(data){const div=document.createElement('div');div.className='row';div.innerHTML=rowHTML(data);return div}
-function bars(container,entries,cls){$(container).innerHTML=entries.map(([k,v])=>`<div class="hbar"><span>${k}</span><div class="track"><div class="fill ${cls||''}" style="width:${Math.round(Math.min(1,v)*100)}%"></div></div><span>${(+v).toFixed(2)}</span></div>`).join('')}
-let liveRows=[],selectedRow=null;
-function openDrawer(row){selectedRow=row;$('#drawer').classList.add('open');$('#drawer-company').textContent=row.company+(row.domain?' · '+row.domain:'');const sigs=[['funding',row.signals.funding],['hiring',row.signals.hiring],['intent',row.signals.intent],['job_change',row.signals.job_change],['negative',row.signals.negative],['trigger',row.signals.trigger]];bars('#sig-bars',sigs);bars('#act-bars',Object.entries(row.probabilities),row.decision==='EMAIL'?'acid':row.decision==='RESEARCH'?'blue':'dim');$('#pool-rows').innerHTML=Object.entries(row.pools).map(([p,v])=>`<div class="poolrow ${v>1?'hot':''}"><span>${p}</span><span>${v.toFixed(3)}</span></div>`).join('');$('#cost-line').textContent='$'+row.costs[row.decision]+' · read-only';$('#compare-out').innerHTML='';setHighlight(row);$('#event').textContent=(row.company||'')+' → '+row.decision}
-async function compare(){if(!selectedRow)return;$('#compare-btn').disabled=true;try{const post=await fetch('/decide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({signals:selectedRow.signals,policy:'post'})}).then(r=>r.json());const pre=await fetch('/decide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({signals:selectedRow.signals,policy:'pre'})}).then(r=>r.json());$('#compare-out').innerHTML=`<span class="badge pre">PRE ${pre.decision} ${(100*pre.confidence).toFixed(0)}%</span><span class="badge post">POST ${post.decision} ${(100*post.confidence).toFixed(0)}%</span>`}catch(e){$('#compare-out').innerHTML='<span style="color:var(--red)">compare failed</span>'}finally{$('#compare-btn').disabled=false}}
-async function goLive(){const q=$('#clay-query').value.trim();if(!q)return;$('#clay-search').disabled=true;$('#clay-search').textContent='SEARCHING…';$('#rows').innerHTML='';$('#event').textContent='querying clay…';try{const res=await fetch('/live?query='+encodeURIComponent(q)+'&limit=10').then(r=>r.json());if(res.error)throw new Error(res.error);liveRows=res.rows;const dist=res.distribution||{};$('#accounts').textContent=liveRows.length;$('#emails').textContent=dist.EMAIL||0;$('#researches').textContent=dist.RESEARCH||0;$('#ignores').textContent=dist.IGNORE||0;liveRows.forEach((r,i)=>{setTimeout(()=>{const div=renderRow({company:r.company,domain:r.domain,employees:(r.size||'—').replace('10,001+','10k+'),funding:'F '+(r.signals.funding||0).toFixed(2),signal:(r.industry||'')+' · '+(r.location||''),conf:(100*r.confidence).toFixed(0)+'%',action:r.decision});div.classList.add('stream-in');div.onclick=()=>{document.querySelectorAll('.row').forEach(x=>x.classList.remove('selected'));div.classList.add('selected');openDrawer(r)};$('#rows').appendChild(div);const ca=r.channel_activity||{};const avg=Object.values(ca).reduce((a,v)=>a+v,0)/(Object.keys(ca).length||1);activity=Math.min(1,.3+avg*2);$('#activity').textContent=activity.toFixed(2);playing=true;setTimeout(()=>playing=false,600);$('#event').textContent=(i+1)+'/'+liveRows.length+' · '+(r.company||'')+' → '+r.decision},i*320)});$('#event').textContent='evaluated '+liveRows.length+' companies'}catch(e){$('#event').textContent='live search failed: '+e.message}finally{$('#clay-search').disabled=false;$('#clay-search').textContent='SEARCH'}}
-$('#clay-search').onclick=goLive;$('#clay-query').addEventListener('keydown',e=>{if(e.key==='Enter')goLive()});$('#compare-btn').onclick=compare;
-async function boot(){await loadBrain();$('#event').textContent='connectome loaded';goLive()}
-window.addEventListener('resize',size);size();draw();boot();
-</script>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Fly Brain / GTM workspace</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: oklch(97% .012 92);
+      --surface: oklch(99% .006 92);
+      --ink: oklch(24% .035 255);
+      --muted: oklch(52% .035 255);
+      --quiet: oklch(67% .025 255);
+      --line: oklch(87% .025 92);
+      --blue: oklch(49% .16 245);
+      --blue-soft: oklch(91% .045 245);
+      --orange: oklch(63% .16 52);
+      --orange-soft: oklch(93% .04 52);
+      --green: oklch(48% .13 155);
+      --green-soft: oklch(91% .05 155);
+      --red: oklch(48% .16 20);
+      --shadow: 0 12px 32px oklch(25% .03 92 / .07);
+      --radius: 14px;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --sans: "Plus Jakarta Sans", "Avenir Next", ui-sans-serif, system-ui, sans-serif;
+      font-family: var(--sans);
+      font-size: 15px;
+      background: var(--paper);
+      color: var(--ink);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--paper); }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+      outline: 3px solid var(--blue); outline-offset: 3px;
+    }
+    .skip { position: absolute; left: 12px; top: -60px; padding: 10px 14px; background: var(--ink); color: var(--surface); z-index: 10; }
+    .skip:focus { top: 12px; }
+    header { height: 66px; display: flex; align-items: center; justify-content: space-between; padding: 0 34px; border-bottom: 1px solid var(--line); background: color-mix(in oklch, var(--surface) 94%, var(--blue-soft)); }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 760; letter-spacing: -.04em; }
+    .mark { width: 27px; height: 27px; display: grid; place-items: center; border: 1.5px solid var(--blue); border-radius: 50%; color: var(--blue); font-size: 14px; }
+    .brand small { display: block; margin-top: 2px; color: var(--quiet); font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: .02em; }
+    .top-meta { display: flex; align-items: center; gap: 18px; color: var(--muted); font-family: var(--mono); font-size: 10px; }
+    .mode { display: inline-flex; gap: 4px; padding: 3px; background: var(--paper); border: 1px solid var(--line); border-radius: 9px; }
+    .mode button { border: 0; border-radius: 6px; padding: 7px 10px; color: var(--muted); background: transparent; font-size: 11px; }
+    .mode button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+    .status { display: inline-flex; align-items: center; gap: 7px; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+    main { max-width: 1540px; margin: 0 auto; padding: 40px 34px 60px; }
+    .intro { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr); gap: 48px; align-items: end; margin-bottom: 28px; }
+    .eyebrow { margin: 0 0 10px; color: var(--blue); font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { max-width: 700px; margin: 0; font-size: clamp(2rem, 4vw, 4.25rem); line-height: .98; letter-spacing: -.075em; font-weight: 710; }
+    .lede { max-width: 430px; margin: 0 0 3px; color: var(--muted); font-size: 1.02rem; line-height: 1.55; }
+    .command { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 18px; padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .command input { min-width: 0; border: 0; background: transparent; color: var(--ink); padding: 8px 10px; font-family: var(--mono); font-size: 11px; }
+    .command button { border: 0; border-radius: 9px; padding: 0 18px; background: var(--blue); color: white; font-weight: 740; font-size: 12px; }
+    .command button:disabled { opacity: .55; cursor: wait; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(370px, .85fr); gap: 18px; align-items: start; }
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .panel-head { display: flex; justify-content: space-between; gap: 20px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    .panel-head h2 { margin: 0; font-size: 15px; letter-spacing: -.025em; }
+    .panel-head p { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .label { color: var(--quiet); font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line); }
+    .stat { padding: 15px 18px; border-right: 1px solid var(--line); }
+    .stat:last-child { border-right: 0; }
+    .stat strong { display: block; margin-top: 7px; font-size: 22px; font-variant-numeric: tabular-nums; letter-spacing: -.05em; }
+    .stat:nth-child(2) strong { color: var(--blue); }
+    .stat:nth-child(3) strong { color: var(--orange); }
+    .stat:nth-child(4) strong { color: var(--green); }
+    .rows { max-height: 635px; overflow: auto; }
+    .row { display: grid; grid-template-columns: minmax(170px, 1.4fr) .8fr .8fr minmax(90px, .75fr) .85fr; gap: 14px; align-items: center; min-height: 78px; padding: 12px 20px; border-bottom: 1px solid var(--line); transition: background 150ms ease, transform 150ms ease; }
+    .row:hover, .row[data-selected="true"] { background: var(--blue-soft); }
+    .row:focus-visible { position: relative; z-index: 1; }
+    .company { min-width: 0; font-weight: 720; letter-spacing: -.02em; }
+    .company span { display: block; max-width: 240px; overflow: hidden; color: var(--muted); font-family: var(--mono); font-size: 10px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+    .cell { min-width: 0; color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .cell strong { display: block; color: var(--ink); font-weight: 620; }
+    .pill { display: inline-flex; width: fit-content; padding: 5px 8px; border-radius: 999px; font-family: var(--mono); font-size: 10px; font-weight: 700; }
+    .pill.research { background: var(--blue-soft); color: var(--blue); }
+    .pill.draft { background: var(--orange-soft); color: var(--orange); }
+    .pill.ignore { background: var(--green-soft); color: var(--green); }
+    .pill.escalate { background: color-mix(in oklch, var(--red) 10%, var(--surface)); color: var(--red); }
+    .empty { padding: 42px 20px; color: var(--muted); text-align: center; line-height: 1.6; }
+    .brain-panel { position: sticky; top: 18px; }
+    .brain-wrap { position: relative; height: 300px; background: oklch(23% .04 252); }
+    canvas { display: block; width: 100%; height: 100%; }
+    .brain-caption { position: absolute; left: 18px; top: 16px; color: oklch(91% .02 92); }
+    .brain-caption .label { color: oklch(76% .04 245); }
+    .brain-caption strong { display: block; margin-top: 8px; font-size: 20px; letter-spacing: -.04em; }
+    .brain-caption span { color: oklch(76% .02 92); font-family: var(--mono); font-size: 10px; }
+    .brain-reading { position: absolute; right: 18px; bottom: 16px; color: oklch(91% .02 92); font-family: var(--mono); font-size: 10px; text-align: right; }
+    .brain-reading strong { display: block; margin-top: 6px; color: oklch(83% .16 90); font-size: 22px; font-weight: 500; }
+    .evidence { padding: 20px; }
+    .evidence h3 { margin: 0 0 14px; font-size: 13px; }
+    .timeline { display: grid; gap: 0; margin-bottom: 22px; }
+    .step { display: grid; grid-template-columns: 25px 1fr; gap: 11px; min-height: 43px; }
+    .step-marker { position: relative; display: grid; place-items: start center; }
+    .step-marker::before { content: ""; width: 9px; height: 9px; margin-top: 3px; border: 2px solid var(--blue); border-radius: 50%; background: var(--surface); z-index: 1; }
+    .step:not(:last-child) .step-marker::after { content: ""; position: absolute; top: 13px; bottom: 0; width: 1px; background: var(--line); }
+    .step-copy { padding-bottom: 14px; }
+    .step-copy strong { display: block; font-size: 12px; }
+    .step-copy span { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .draft { padding: 15px; background: var(--orange-soft); border: 1px solid color-mix(in oklch, var(--orange) 25%, var(--line)); border-radius: 10px; }
+    .draft .label { color: var(--orange); }
+    .draft h4 { margin: 8px 0 4px; font-size: 13px; }
+    .draft p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .provenance { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+    .provenance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+    .prov-item { min-width: 0; }
+    .prov-item strong { display: block; margin-top: 4px; overflow: hidden; font-family: var(--mono); font-size: 10px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+    .notice { margin-top: 18px; padding: 11px 12px; color: var(--muted); background: var(--paper); border-left: 3px solid var(--blue); font-size: 11px; line-height: 1.5; }
+    footer { display: flex; justify-content: space-between; gap: 20px; max-width: 1540px; margin: 0 auto; padding: 0 34px 24px; color: var(--quiet); font-family: var(--mono); font-size: 10px; }
+    @media (max-width: 1050px) { .intro { grid-template-columns: 1fr; gap: 18px; } .workspace { grid-template-columns: 1fr; } .brain-panel { position: static; } }
+    @media (max-width: 680px) { header { height: auto; min-height: 66px; padding: 14px 18px; align-items: flex-start; gap: 14px; } .top-meta { flex-direction: column; align-items: flex-end; gap: 8px; } main { padding: 28px 14px 42px; } footer { padding: 0 14px 18px; flex-direction: column; gap: 8px; } h1 { font-size: 2.65rem; } .command { grid-template-columns: 1fr; } .command button { min-height: 44px; } .stats { grid-template-columns: repeat(2, 1fr); } .stat:nth-child(2) { border-right: 0; } .stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); } .row { grid-template-columns: 1fr auto; gap: 8px 14px; padding: 15px 16px; } .row > .cell:nth-child(2), .row > .cell:nth-child(3), .row > .cell:nth-child(4) { display: none; } .row > .cell:last-child { justify-self: end; } .brain-wrap { height: 240px; } .provenance-grid { grid-template-columns: 1fr; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main-content">Skip to workspace</a>
+  <header>
+    <div class="brand"><div class="mark" aria-hidden="true">✳</div><div>Fly Brain<small>GTM WORKSPACE / NO SEND</small></div></div>
+    <div class="top-meta"><div class="mode" role="group" aria-label="Demo mode"><button id="replay-mode" aria-pressed="true">Recorded proof</button><button id="live-mode" aria-pressed="false">Live Clay</button></div><div class="status"><span class="status-dot" aria-hidden="true"></span><span id="status-text">READY</span></div></div>
+  </header>
+  <main id="main-content">
+    <section class="intro"><div><p class="eyebrow">Clay signal orchestration / 2026.09</p><h1>Let the fly decide what deserves a closer look.</h1></div><p class="lede">A connectome-constrained policy reads public GTM signals, spends research only when the account earns it, and leaves an unsent draft with its evidence.</p></section>
+    <form class="command" id="run-form"><label class="sr-only" for="clay-query">Clay Search query</label><input id="clay-query" autocomplete="off" spellcheck="false"><button id="run-button" type="submit">Run draft-only pass</button></form>
+    <section class="workspace">
+      <section class="panel" aria-labelledby="queue-title"><div class="panel-head"><div><h2 id="queue-title">Account queue</h2><p id="queue-subtitle">Recorded showcase / deterministic replay</p></div><span class="label" id="queue-label">READ-ONLY</span></div><div class="stats"><div class="stat"><span class="label">Evaluated</span><strong id="accounts">0</strong></div><div class="stat"><span class="label">Research</span><strong id="researches">0</strong></div><div class="stat"><span class="label">Drafts</span><strong id="drafts">0</strong></div><div class="stat"><span class="label">Ignored</span><strong id="ignores">0</strong></div></div><div class="rows" id="rows" aria-live="polite"><div class="empty">Loading the versioned proof record…</div></div></section>
+      <aside class="panel brain-panel" aria-labelledby="evidence-title"><div class="brain-wrap"><canvas id="brain" aria-label="Animated connectome diagnostic"></canvas><div class="brain-caption"><span class="label">DIAGNOSTIC SIGNATURE</span><strong>MaleCNS v1.0</strong><span id="neuron-count">connectome loading…</span></div><div class="brain-reading">TRACE ACTIVITY<strong id="activity">0.00</strong></div></div><div class="evidence"><h3 id="evidence-title">Decision evidence</h3><div class="timeline" id="timeline"><div class="empty">Select an account to inspect its path.</div></div><div class="draft" id="draft" hidden><span class="label">Unsent artifact</span><h4 id="draft-title">Draft not generated</h4><p id="draft-copy">The live-draft mode can create copy, but never a recipient or send action.</p></div><div class="provenance"><span class="label">Model and provenance</span><div class="provenance-grid"><div class="prov-item"><span class="label">Model</span><strong id="model-version">—</strong></div><div class="prov-item"><span class="label">Source</span><strong id="source-id">—</strong></div><div class="prov-item"><span class="label">Credits</span><strong id="credit-use">—</strong></div><div class="prov-item"><span class="label">State</span><strong id="contact-state">NO SEND PATH</strong></div></div></div><div class="notice" id="notice">Recorded proof is the default. Live Clay mode is capped at 10 records and produces drafts only.</div></div></aside>
+    </section>
+  </main>
+  <footer><span id="event">Booting recorded proof…</span><span>Fly Brain × Clay / unsent by construction</span></footer>
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+    const DEFAULT_QUERY = 'select from people where location_country = "United States" and experiences.any(is_current = true and job_title is_similar_to ("Owner", "Founder", "Chief Operating Officer", "Vice President of Operations", "Director of Operations", "Regional Director of Operations") and company.industry in ("Restaurants", "Food and Beverage Services") and company.company_size in ("11-50", "51-200", "201-500"))';
+    const state = { mode: 'replay', rows: [], selected: null, graph: null, points: [], frame: 0, activity: 0 };
+    $('#clay-query').value = DEFAULT_QUERY;
+    function text(tag, value, className) { const node = document.createElement(tag); node.textContent = value == null ? '—' : String(value); if (className) node.className = className; return node; }
+    function actionClass(action) { return ({ RESEARCH: 'research', DRAFT_EMAIL: 'draft', IGNORE: 'ignore', ESCALATE: 'escalate' })[action] || 'research'; }
+    function actionLabel(action) { return action === 'DRAFT_EMAIL' ? 'DRAFT EMAIL' : action || '—'; }
+    function renderStats(rows) { $('#accounts').textContent = rows.length; $('#researches').textContent = rows.filter(r => r.decision === 'RESEARCH').length; $('#drafts').textContent = rows.filter(r => r.decision === 'DRAFT_EMAIL').length; $('#ignores').textContent = rows.filter(r => r.decision === 'IGNORE').length; }
+    function renderRows(rows) {
+      const root = $('#rows'); root.replaceChildren();
+      if (!rows.length) { root.append(text('div', 'No records returned. The proof remains read-only.', 'empty')); return; }
+      rows.forEach((row, index) => {
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'row'; button.dataset.index = index; button.dataset.selected = 'false';
+        const company = document.createElement('span'); company.className = 'company'; company.append(text('span', row.company || 'Unknown company')); company.append(text('span', row.domain || row.title || 'public record'));
+        const size = document.createElement('span'); size.className = 'cell'; size.append(text('strong', row.size || 'Unknown size')); size.append(text('span', row.location || 'Location unknown'));
+        const signal = document.createElement('span'); signal.className = 'cell'; signal.append(text('strong', row.industry || 'Signal set')); signal.append(text('span', row.verified_signal || row.signal || 'Sourced signals'));
+        const confidence = document.createElement('span'); confidence.className = 'cell'; confidence.append(text('strong', row.confidence == null ? '—' : `${Math.round(Number(row.confidence) * 100)}%`)); confidence.append(text('span', 'policy confidence'));
+        const action = document.createElement('span'); action.className = `pill ${actionClass(row.decision)}`; action.textContent = actionLabel(row.decision);
+        button.append(company, size, signal, confidence, action); button.addEventListener('click', () => selectRow(row, button)); root.append(button);
+      });
+      selectRow(rows[0], root.querySelector('.row'));
+    }
+    function renderTimeline(row) {
+      const root = $('#timeline'); root.replaceChildren();
+      const hasResearch = row.policy_action === 'RESEARCH' || row.decision === 'RESEARCH' || row.enrichment;
+      const steps = [['Record selected', row.company || 'Public Clay record'], ['Signals normalized', row.provenance?.[0]?.source || 'Recorded fixture'], ...(hasResearch ? [['Fly chooses RESEARCH', 'Research is a budgeted policy action'], ['Clay enrichment returned', row.enrichment?.status || 'Evidence attached']] : []), [row.decision === 'DRAFT_EMAIL' ? 'Unsent draft created' : 'Fly closes the loop', row.decision === 'DRAFT_EMAIL' ? 'No recipient or send action exists' : `${actionLabel(row.decision)} / no external action`]];
+      steps.forEach(([title, detail]) => { const step = document.createElement('div'); step.className = 'step'; const marker = document.createElement('div'); marker.className = 'step-marker'; const copy = document.createElement('div'); copy.className = 'step-copy'; copy.append(text('strong', title), text('span', detail)); step.append(marker, copy); root.append(step); });
+    }
+    function selectRow(row, button) {
+      state.selected = row; document.querySelectorAll('.row').forEach(node => { node.dataset.selected = node === button ? 'true' : 'false'; });
+      renderTimeline(row); const draft = $('#draft'); draft.hidden = row.decision !== 'DRAFT_EMAIL'; if (row.draft) { $('#draft-title').textContent = `${row.company || 'Account'} / unsent sequence`; $('#draft-copy').textContent = row.draft.sequence?.[0]?.body || 'Draft content is available in the artifact.'; }
+      $('#model-version').textContent = row.model_version || state.model_version || 'recorded proof'; $('#source-id').textContent = row.provenance?.[0]?.record_id || row.provenance?.[0]?.source || 'captured fixture'; $('#credit-use').textContent = `${row.credit_cost || 0} credits`; $('#event').textContent = `${row.company || 'Account'} → ${actionLabel(row.decision)}`; state.activity = Math.min(1, .25 + Number(row.confidence || 0) * .7);
+    }
+    function replayRows(payload) {
+      if (Array.isArray(payload.rows)) return payload.rows;
+      return (payload.scenes || []).filter(scene => scene.kind === 'account').map((scene, index) => ({ company: scene.company, size: scene.employees, signal: scene.signal || 'Recorded signal', decision: scene.action === 'EMAIL' ? 'DRAFT_EMAIL' : scene.action === 'IGNORE' ? 'IGNORE' : 'RESEARCH', confidence: .5, provenance: [{ source: 'recorded proof', record_id: `scene-${index + 1}` }], model_version: 'recorded-proof' }));
+    }
+    async function run(mode) {
+      state.mode = mode; $('#status-text').textContent = mode === 'replay' ? 'RECORDED' : 'LIVE / DRAFT-ONLY'; $('#run-button').disabled = true; $('#run-button').textContent = mode === 'replay' ? 'Loading proof…' : 'Running capped pass…'; $('#event').textContent = mode === 'replay' ? 'Loading versioned proof…' : 'Querying Clay read-only…';
+      try { const response = await fetch('/api/demo/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode, query: $('#clay-query').value, limit: 10 }) }); const payload = await response.json(); if (!response.ok) throw new Error(payload.error || 'Run failed'); state.rows = replayRows(payload); state.model_version = payload.model_version || state.rows[0]?.model_version; renderStats(state.rows); renderRows(state.rows); $('#queue-subtitle').textContent = mode === 'replay' ? 'Recorded showcase / deterministic replay' : 'Live Clay data / enrichment and drafts only'; $('#queue-label').textContent = mode === 'replay' ? 'READ-ONLY' : 'NO SEND'; $('#notice').textContent = mode === 'replay' ? 'This is a recorded proof path. It makes no network calls after loading.' : `Live Clay pass capped at ${payload.budget?.max_records || 10} records and ${payload.budget?.max_credits || 50} credits. No recipient or send action is created.`; $('#event').textContent = `${state.rows.length} records / ${mode === 'replay' ? 'replay' : 'draft-only'}`; } catch (error) { $('#event').textContent = 'Run unavailable; showing the safe empty state.'; $('#rows').replaceChildren(text('div', 'We could not reach the configured source. No action was taken.', 'empty')); } finally { $('#run-button').disabled = false; $('#run-button').textContent = 'Run draft-only pass'; }
+    }
+    $('#replay-mode').addEventListener('click', () => { $('#replay-mode').setAttribute('aria-pressed', 'true'); $('#live-mode').setAttribute('aria-pressed', 'false'); run('replay'); }); $('#live-mode').addEventListener('click', () => { $('#replay-mode').setAttribute('aria-pressed', 'false'); $('#live-mode').setAttribute('aria-pressed', 'true'); run('live_draft'); }); $('#run-form').addEventListener('submit', (event) => { event.preventDefault(); run(state.mode); });
+    const canvas = $('#brain'), ctx = canvas.getContext('2d');
+    function resizeCanvas() { canvas.width = canvas.clientWidth * devicePixelRatio; canvas.height = canvas.clientHeight * devicePixelRatio; ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); }
+    async function loadGraph() { try { const response = await fetch('/graph'); state.graph = await response.json(); const count = Math.min(15000, state.graph.points.length); state.points = state.graph.points.slice(0, count).map((point, index) => ({ x: point[0], y: point[1], z: point[2], phase: (index % 97) * .11 })); $('#neuron-count').textContent = `${state.graph.n.toLocaleString()} neurons / ${count.toLocaleString()} rendered`; } catch { $('#neuron-count').textContent = 'diagnostic unavailable'; } }
+    function drawBrain() { const width = canvas.clientWidth, height = canvas.clientHeight; ctx.clearRect(0, 0, width, height); state.frame += .45; const rotation = state.frame * .0025, c = Math.cos(rotation), s = Math.sin(rotation); const projected = state.points.map(point => { const x = point.x * c - point.z * s; const z = point.x * s + point.z * c + 2.35; const scale = 1.28 / z; return { x: width / 2 + x * scale * width * .8, y: height / 2 - point.y * scale * height * .8, z, point }; }).sort((a, b) => b.z - a.z); ctx.globalCompositeOperation = 'lighter'; projected.forEach(({ x, y, z, point }) => { const pulse = (Math.sin(state.frame * .04 + point.phase) + 1) / 2; const alpha = Math.max(.06, .35 + pulse * (.2 + state.activity * .45)); ctx.fillStyle = `rgba(177, 207, 218, ${Math.min(.8, alpha)})`; ctx.beginPath(); ctx.arc(x, y, Math.max(.45, 1.1 * (1 - z / 4)), 0, Math.PI * 2); ctx.fill(); }); ctx.globalCompositeOperation = 'source-over'; $('#activity').textContent = state.activity.toFixed(2); requestAnimationFrame(drawBrain); }
+    window.addEventListener('resize', resizeCanvas); resizeCanvas(); loadGraph(); drawBrain(); run('replay');
+  </script>
+</body>
+</html>

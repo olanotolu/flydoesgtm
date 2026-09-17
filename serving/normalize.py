@@ -30,11 +30,19 @@ def _scale(x, mid):
 def normalize_row(raw):
     if not isinstance(raw, dict):
         raise ValueError("raw must be an object")
-    return {
-        ch: max(_scale(_soft_num(raw.get(key, 0)), mid)
-                for key, mid in fields)
-        for ch, fields in RAW_FIELDS.items()
-    }
+    out = {}
+    for ch, fields in RAW_FIELDS.items():
+        values = [(raw[key], mid) for key, mid in fields
+                  if key in raw and raw[key] is not None]
+        if not values:
+            # Unknown is neutral, not evidence of no funding, no hiring,
+            # or no intent. This prevents sparse Clay rows collapsing into
+            # a false low-signal prior.
+            out[ch] = 0.5
+            continue
+        out[ch] = max(_scale(_soft_num(value), mid)
+                      for value, mid in values)
+    return out
 
 
 def from_request(req):

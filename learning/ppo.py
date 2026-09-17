@@ -26,6 +26,7 @@ def generalized_advantage(rewards, values, dones, gamma=0.99, lam=0.95):
 def ppo_update(policy, opt, traj):
     feat, obs, act = traj["feat"], traj["obs"], traj["act"]
     logp_old, ret, val_old = traj["logp"], traj["ret"], traj["val"]
+    action_mask = traj.get("action_mask")
 
     adv = traj.get("adv")
     if adv is None:
@@ -38,6 +39,8 @@ def ppo_update(policy, opt, traj):
         for i in range(0, n, MINIBATCH):
             b = perm[i:i + MINIBATCH]
             logits, value = policy(feat[b], obs[b])
+            if action_mask is not None:
+                logits = logits.masked_fill(~action_mask[b], -1e9)
             dist = Categorical(logits=logits)
             logp = dist.log_prob(act[b])
 

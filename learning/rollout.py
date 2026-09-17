@@ -38,6 +38,7 @@ def run_episode(brain, trace, enc, policy, world, allowed, device,
 
     feats, obss, action_idx, logprobs, values = [], [], [], [], []
     positions = {}
+    row_slots = []
     n_slots = 0
 
     brain.reset()
@@ -60,17 +61,22 @@ def run_episode(brain, trace, enc, policy, world, allowed, device,
             logits, value = policy(feat, x)
         logits = logits.masked_fill(~allowed_logits, -1e9)
         dist = Categorical(logits=logits)
-        a_world = logits.argmax(1) if greedy else dist.sample()
+        requested = logits.argmax(1) if greedy else dist.sample()
 
         base = n_slots
         slots = list(range(base, base + len(idxs)))
         n_slots += len(idxs)
-        world.apply(day, idxs, a_world.cpu().numpy().astype(np.int64),
-                    slot_of=lambda k: slots[k])
+        executed = world.apply(
+            day, idxs, requested.cpu().numpy().astype(np.int64),
+            slot_of=lambda k: slots[k],
+        )
+        a_world = torch.as_tensor(executed, device=device,
+                                  dtype=torch.long)
 
         row_start = sum(x.shape[0] for x in feats)
         for row, account in enumerate(idxs):
             positions.setdefault(int(account), []).append(row_start + row)
+            row_slots.append(slots[row])
         feats.append(feat.detach())
         obss.append(x)
         action_idx.append(a_world)
@@ -83,21 +89,32 @@ def run_episode(brain, trace, enc, policy, world, allowed, device,
     val_all = torch.cat(values)
     rewards = torch.zeros(len(feat_all), device=device)
     dones = torch.zeros(len(feat_all), dtype=torch.bool, device=device)
-    # Delayed account economics lands on the account's final decision;
-    # GAE propagates it backward through that account's action history.
+    # Delayed account economics lands on the decision slot that caused it.
+    # Each account's rows are gathered before GAE, so day-major batching
+    # cannot leak one account's rewards into another account's history.
     for account_positions in positions.values():
-        last = account_positions[-1]
-        slot = last  # slots and rollout rows are both append-only here
-        rewards[last] = float(world.credit.get(slot, 0.0))
-        dones[last] = True
-    advantages, returns = generalized_advantage(
-        rewards, val_all, dones)
+        account_rows = torch.as_tensor(account_positions, device=device)
+        for row, slot in zip(account_positions,
+                             [row_slots[i] for i in account_positions]):
+            rewards[row] = float(world.credit.get(slot, 0.0))
+        dones[account_rows[-1]] = True
+
+    advantages = torch.zeros_like(rewards)
+    returns = torch.zeros_like(rewards)
+    for account_positions in positions.values():
+        account_rows = torch.as_tensor(account_positions, device=device)
+        account_adv, account_ret = generalized_advantage(
+            rewards[account_rows], val_all[account_rows],
+            dones[account_rows])
+        advantages[account_rows] = account_adv
+        returns[account_rows] = account_ret
 
     return {
         "feat": feat_all, "obs": obs_all,
         "act": torch.cat(action_idx), "logp": torch.cat(logprobs),
         "val": val_all, "ret": returns.detach(),
         "adv": advantages.detach(), "reward": rewards, "done": dones,
+        "action_mask": allowed_logits.expand(len(feat_all), -1).clone(),
         "teacher": torch.as_tensor(teacher_actions(obs_all.detach().cpu().numpy()),
                                    device=device),
     }

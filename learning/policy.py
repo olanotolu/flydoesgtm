@@ -21,8 +21,9 @@ BASE_COSTS = torch.tensor([2.0, 1.0, 5.0, 15.0])
 
 
 class FlyPolicy(nn.Module):
-    def __init__(self, n_feat, wait_threshold=0.05):
+    def __init__(self, n_feat, wait_threshold=0.05, use_raw_head=True):
         super().__init__()
+        self.use_raw_head = bool(use_raw_head)
         self.readout = nn.Linear(n_feat, 6)
         self.sensory_head = nn.Linear(16, 6, bias=False)
         nn.init.zeros_(self.sensory_head.weight)
@@ -38,7 +39,9 @@ class FlyPolicy(nn.Module):
     def forward(self, feat, obs):
         """feat (m, F) trace features, obs (m, 16) raw channels
         (the margins need today's prices — economics is an input too)."""
-        scores = self.readout(feat) + self.sensory_scale * self.sensory_head(obs)
+        scores = self.readout(feat)
+        if self.use_raw_head:
+            scores = scores + self.sensory_scale * self.sensory_head(obs)
         wait = self.wait_threshold - scores.max(dim=1, keepdim=True).values
         logits = torch.cat([wait, scores], dim=1) \
             * self.action_gain + self.action_bias
@@ -62,3 +65,19 @@ class MLPPolicy(nn.Module):
     def forward(self, feat, obs):
         h = self.net(obs)            # baseline sees the raw observation
         return self.head(h), self.value_head(h).squeeze(-1)
+
+
+def parameter_count(model):
+    return sum(parameter.numel() for parameter in model.parameters())
+
+
+def matched_mlp_hidden(target_params, n_in=16, tolerance=0.01):
+    """Choose a dense control width whose parameter count is within 1%."""
+    candidates = []
+    for hidden in range(8, 1025):
+        count = parameter_count(MLPPolicy(n_in=n_in, hidden=hidden))
+        candidates.append((abs(count - target_params), hidden, count))
+    _, hidden, count = min(candidates)
+    if abs(count - target_params) / max(1, target_params) > tolerance:
+        raise ValueError("could not parameter-match MLP within 1%")
+    return hidden, count

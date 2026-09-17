@@ -19,8 +19,8 @@ def test_normalize_accepts_flat_request():
 
 def test_replay_is_json():
     from demo.scenarios import SCENES
-    assert len(SCENES) == 11
-    assert SCENES[7]["action"] == "IGNORE"
+    assert len(SCENES) == 7
+    assert all(scene.get("action") != "EMAIL" for scene in SCENES)
 
 
 def test_clay_range_parsing():
@@ -32,5 +32,23 @@ def test_clay_range_parsing():
     raw = safe_record({"domain": "clay.com", "name": "Clay",
                        "size": "201-500", "annual_revenue": "25M-75M",
                        "total_funding_amount_range_usd": None})
-    assert raw["total_funding_usd"] == 50e6
-    assert raw["open_roles"] > 0
+    assert "total_funding_usd" not in raw
+    assert "open_roles" not in raw
+
+
+def test_missing_signals_are_neutral_not_false_zeroes():
+    out = normalize_row({"name": "Clay"})
+    assert all(value == 0.5 for value in out.values())
+
+
+def test_real_fields_are_preserved_without_inference():
+    from serving.clay_records import safe_record
+    raw = safe_record({
+        "name": "Example Restaurants",
+        "domain": "example.test",
+        "industry": "Restaurants",
+        "open_roles": 7,
+        "total_funding_amount_range_usd": "1M-5M",
+    })
+    assert raw["total_funding_usd"] == 3e6
+    assert raw["open_roles"] == 7

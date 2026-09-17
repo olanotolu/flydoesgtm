@@ -19,8 +19,12 @@ def get_brain(batch=1, device=None, seed=64):
                     batch=batch, seed=seed, sensory_input=False)
 
 
-def weights_checksum(data=None):
-    """sha256 of the loaded weight matrix — the frozen-biology invariant."""
+def weights_checksum(data=None, brain=None):
+    """sha256 of the frozen weights, preferring the in-memory brain array."""
+    if brain is not None and hasattr(brain, "weights"):
+        h = hashlib.sha256()
+        h.update(np.asarray(brain.weights).tobytes())
+        return h.hexdigest()
     from flybrain.data import DATA, ensure_data
     d = ensure_data(data or DATA)
     W = sparse.load_npz(Path(d) / "weights.npz")

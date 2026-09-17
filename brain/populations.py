@@ -102,8 +102,9 @@ def tracked_set(brain, channel_map, kc_sample=KC_SAMPLE, seed=7):
 
     descending (motor command, 1,314) + ascending (body->brain state,
     1,846) + a Kenyon-cell sample (the fly's own learning center) +
-    dopaminergic clusters (PPL1 aversive, PAM appetitive) + the injected
-    channel populations themselves (input echo) + named motor groups.
+    dopaminergic clusters (PPL1 aversive, PAM appetitive) + named motor
+    groups. Injected sensory channel populations are intentionally excluded
+    so the readout cannot win by copying its raw input back to itself.
     """
     rng = np.random.default_rng(seed)
     dn = _idx_by_superclass(brain, "descending_neuron")
@@ -116,8 +117,7 @@ def tracked_set(brain, channel_map, kc_sample=KC_SAMPLE, seed=7):
                            _idx_by_prefix(brain, "PAM")])
     motors = np.concatenate(list(brain.groups.values())) \
         if brain.groups else np.empty(0, np.int64)
-    chans = np.concatenate(list(channel_map.values()))
-    tracked = np.unique(np.concatenate([dn, an, kc, dans, motors, chans]))
+    tracked = np.unique(np.concatenate([dn, an, kc, dans, motors]))
     return tracked.astype(np.int64)
 
 

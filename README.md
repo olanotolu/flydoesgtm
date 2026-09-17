@@ -1,4 +1,4 @@
-# the fly got a job at clay
+# Fly Brain × Clay
 
 > they mapped a fruit fly's brain, so i gave it a Clay account.
 >
@@ -33,7 +33,7 @@ The full biology/engineering boundary is in
 An account arrives with noisy signals. The policy can:
 
 ```
-WAIT · OBSERVE · RESEARCH · ENRICH · EMAIL · ESCALATE · IGNORE
+IGNORE · RESEARCH · EMAIL → DRAFT_EMAIL · ESCALATE
 ```
 
 `OBSERVE` is cheap but never removes uncertainty. `RESEARCH` is
@@ -52,25 +52,22 @@ The fly has to learn qualification, not maximize emails.
 open http://127.0.0.1:8090
 ```
 
-The local server exposes:
+The local server exposes a recorded proof path by default:
 
-- **Live mode** (`http://127.0.0.1:8090`) — real Clay search auto-fires on load and
-  streams companies into the table, the fly decides each one through the
-  real connectome, stats show the live decision distribution, and
-  clicking a row opens the decision provenance panel (sensory channels,
-  P(action), named DN pool activity, credit cost) with a PRE/POST
-  training comparison on the same company.
-- `POST /decide` — raw Clay-style row or normalized signals → flat
-  Clay-mappable action probabilities plus 14,700 multiscale activity
-  features. Body `{"policy": "pre"}` diffs the no-warm-start checkpoint
-  against the warm-started one.
-- `GET /live?query=...&limit=N` — read-only Clay search → per-company fly
-  decisions + distribution (server-side key only).
+- **Live Clay mode** is an explicit toggle — a capped read-only search can
+  produce provenance-complete, visibly unsent drafts, but never sends,
+  enrolls, replies, updates a CRM, or mutates a campaign.
+- `POST /api/demo/run` — `replay` or capped `live_draft` mode.
+- `GET /api/demo/replay/default` — deterministic captured proof with no network dependency.
+- `GET /api/health` and `GET /api/artifacts/current` — readiness and provenance.
+- `POST /decide` — compatibility route for one normalized record.
 - `GET /graph` — 24,000 sampled real MaleCNS soma positions, channels,
   and motor groups for the visualization.
 - `GET /replay` — deterministic 31-second demo sequence.
-- `demo/clayfly.gif` — recorded from the live system
-  (`demo/capture_gif.py`, also a console-error-checking UI verification).
+The fixed live query targets US operations decision-makers at 11–500 employee
+restaurant and food-service companies. It deduplicates by company, processes
+at most ten records, permits at most four enrichments per record, and caps
+the demo at 50 credits while preserving a 300-credit floor.
 
 ## Train on Modal
 
@@ -85,25 +82,20 @@ modal token set
 .venv/bin/modal volume get clayfly-data results/fly_policy.pt results/
 ```
 
-The probe measured 166,700 neurons at batch 512 and ~220ms per spiking
-step on B200. The upgraded multiscale+GAE run initially exposed a zero-spend basin.
-After adding transparent teacher warm-starting plus a small learned
-sensory-calibration head and imitation regularization, the B200 run
-returned a best held-out value of **1,256.1**. The preceding fly-only
-run returned -1,114, so the improvement is recorded as an architectural
-change, not hidden. A two-seed B200 smoke sweep before the teacher pass
-returned -182.0 and -105.8, so we do not present one lucky seed as proof. Training metrics are written by the run; no dashboard number should be copied into the
-demo unless it came from a recorded run. Scripted scene numbers are
-labeled `demo / simulated`.
+The earlier 1,256.1 Modal output is preserved as a dated legacy artifact and
+is not final evidence. New B200 runs must use immutable experiment manifests,
+paired held-out worlds, twenty seeds per arm, bootstrap confidence intervals,
+and multiplicity correction before any architecture claim is made. Training
+metrics are written by the run; no dashboard number should be copied into the
+demo unless it came from a recorded run.
 
 ## Demo beat
 
 1. `they mapped a fruit fly's brain.`
 2. `so i gave it a clay account.`
 3. Stealth: 2 employees, unknown funding → OBSERVE → RESEARCH.
-4. `$8M raised · ex-OpenAI · 14 GTM roles` → EMAIL → MEETING BOOKED.
-5. DefinitelyRealAI: `$400M claimed`, `carrd.co` → long pause → IGNORE.
-6. **THE FLY HAS LEARNED QUALIFICATION.**
+4. Research returns sourced evidence; the policy re-scores.
+5. The result is `UNSENT DRAFT`, `IGNORE`, or `ESCALATE` — never a contact.
 
 The interface is dense and neutral rather than a generic purple AI
 landing page. The connectome is the hero; Clay is the job.
@@ -137,8 +129,10 @@ modal_train.py  B200 training entrypoint
 - `PPL1`/`PAM` stimulation is a real pulse into annotated DAN cells for
   the visualization. It is not a claim that the fly's biology learns;
   optional plasticity belongs only on our readout interface.
-- Clay live mode is opt-in (`CLAYFLY_LIVE=1`, `CLAYFLY_ROUTINE=...`) and
-  never required for the simulation or demo. It does not send email.
+- Clay live mode is opt-in (`CLAYFLY_LIVE=1`, `CLAYFLY_LIVE_ROUTINES=1`,
+  `CLAYFLY_ROUTINE_ID=...`) and falls back safely when credentials, the
+  workflow routine, or the credit preflight are unavailable. It does not send
+  email.
 - The visual mapping from GTM channels to sensory populations is
   engineered. `ORN` does not biologically mean funding.
 

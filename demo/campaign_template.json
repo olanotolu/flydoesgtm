@@ -1,0 +1,25 @@
+{
+  "name": "DEMO — Fly Brain GTM — DO NOT SEND",
+  "status": "draft",
+  "audience": null,
+  "sender": null,
+  "leads": [],
+  "activation": null,
+  "sequence": [
+    {
+      "step": 1,
+      "channel": "email",
+      "subject": "A useful operations signal at {{company_name}}",
+      "body": "Hi {{first_name}},\n\n{{sender_name}} drafted this for review only. {{verified_signal}}\n\nWorth a quick look?",
+      "status": "UNSENT DRAFT"
+    },
+    {
+      "step": 2,
+      "channel": "email",
+      "subject": "Re: {{company_name}}",
+      "body": "Following up with the same sourced signal for review.\n\n{{sender_name}}",
+      "status": "UNSENT DRAFT"
+    }
+  ],
+  "safe_to_contact": false
+}

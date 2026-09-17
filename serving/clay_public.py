@@ -58,8 +58,8 @@ def search_company(domain, limit=1):
         .get("data", [])
 
 
-def search_companies(query, limit=12):
-    """General SQL-grammar search: 'select from companies where ...'."""
+def search_records(query, limit=12):
+    """General read-only SQL-grammar search for people or companies."""
     key = _key()
     if not key:
         raise ClayError("CLAY_PUBLIC_API_KEY is not set")
@@ -75,3 +75,8 @@ def search_companies(query, limit=12):
     sid = _post("/search/query-mode", {"query": q}, key)["search_id"]
     return _post(f"/search/query-mode/{sid}/run", {"limit": int(limit)},
                  key).get("data", [])
+
+
+def search_companies(query, limit=12):
+    """Backward-compatible alias for the generic read-only search."""
+    return search_records(query, limit)
