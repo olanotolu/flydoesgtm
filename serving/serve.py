@@ -428,7 +428,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = urlsplit(self.path).path
-        if path not in ("/decide", "/api/demo/run"):
+        if path not in ("/decide", "/api/demo/run", "/api/demo/think"):
             self.send_json(404, {"error": "route not found"})
             return
         try:
@@ -436,6 +436,12 @@ class Handler(BaseHTTPRequestHandler):
             if size < 0 or size > MAX_BODY:
                 raise ValueError("request body too large")
             req = json.loads(self.rfile.read(size) or b"{}")
+            if path == "/api/demo/think":
+                from serving.think import build_think_response, clamp_energies
+                signals = clamp_energies(req.get("signals", {}))
+                out = self.service.decide(signals)
+                self.send_json(200, build_think_response(signals, out))
+                return
             if path == "/api/demo/run":
                 mode = req.get("mode", "replay")
                 if mode == "replay":
