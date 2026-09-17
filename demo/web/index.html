@@ -780,6 +780,11 @@
         <div class="mode" role="group" aria-label="Demo mode"><button id="replay-mode" aria-pressed="true">Recorded proof</button><button id="live-mode" aria-pressed="false">Live Clay</button></div>
         <form class="run-form" id="run-form"><label class="sr-only" for="clay-query">Clay Search query</label><input id="clay-query" autocomplete="off" spellcheck="false"><button id="run-button" type="submit">Run draft-only pass</button></form>
       </div>
+      <div class="controls-preview" aria-label="Episode playback">
+        <div class="mode" role="group" aria-label="Episode playback"><button id="episode-play" type="button" aria-pressed="true">Pause episode</button></div>
+        <input id="episode-scrub" type="range" min="0" max="0" value="0" step="1" aria-label="Episode step" style="flex:1;min-width:0">
+        <span class="micro" id="episode-step">—</span>
+      </div>
       <div class="controls-preview" aria-live="polite">
         <div class="preview-item"><span class="micro">Account</span><strong id="preview-company">Feed the fly a company</strong></div>
         <div class="preview-item preview-signals-item"><span class="micro">Signals</span><span id="preview-signals">Clay Search signals will become the episode input</span></div>
@@ -1212,11 +1217,13 @@ resize: resize
       });
       selectRow(rows[0], root.querySelector('.row'));
     }
+    function timelineSteps(row) {
+      const hasResearch = row.policy_action === 'RESEARCH' || row.decision === 'RESEARCH' || row.enrichment;
+      return [['Record selected', row.company || 'Public Clay record'], ['Signals normalized', row.provenance?.[0]?.source || 'Recorded fixture'], ...(hasResearch ? [['Fly chooses RESEARCH', 'Research is a budgeted policy action'], ['Clay enrichment returned', row.enrichment?.status || 'Evidence attached']] : []), [row.decision === 'DRAFT_EMAIL' ? 'Unsent draft created' : 'Fly closes the loop', row.decision === 'DRAFT_EMAIL' ? 'No recipient or send action exists' : `${actionLabel(row.decision)} / no external action`]];
+    }
     function renderTimeline(row) {
       const root = $('#timeline'); root.replaceChildren();
-      const hasResearch = row.policy_action === 'RESEARCH' || row.decision === 'RESEARCH' || row.enrichment;
-      const steps = [['Record selected', row.company || 'Public Clay record'], ['Signals normalized', row.provenance?.[0]?.source || 'Recorded fixture'], ...(hasResearch ? [['Fly chooses RESEARCH', 'Research is a budgeted policy action'], ['Clay enrichment returned', row.enrichment?.status || 'Evidence attached']] : []), [row.decision === 'DRAFT_EMAIL' ? 'Unsent draft created' : 'Fly closes the loop', row.decision === 'DRAFT_EMAIL' ? 'No recipient or send action exists' : `${actionLabel(row.decision)} / no external action`]];
-      steps.forEach(([title, detail]) => { const step = document.createElement('div'); step.className = 'step'; const marker = document.createElement('div'); marker.className = 'step-marker'; const copy = document.createElement('div'); copy.className = 'step-copy'; copy.append(text('strong', title), text('span', detail)); step.append(marker, copy); root.append(step); });
+      timelineSteps(row).forEach(([title, detail]) => { const step = document.createElement('div'); step.className = 'step'; const marker = document.createElement('div'); marker.className = 'step-marker'; const copy = document.createElement('div'); copy.className = 'step-copy'; copy.append(text('strong', title), text('span', detail)); step.append(marker, copy); root.append(step); });
     }
     function setGlow(id, value) {
       const card = document.getElementById(id); if (!card) return;
@@ -1257,6 +1264,7 @@ resize: resize
       execs.classList.toggle('is-live', !idle); execs.classList.toggle('is-idle', idle);
     }
     function selectRow(row, button) {
+      Episode.stop();
       state.selected = row; document.querySelectorAll('.row').forEach(node => { node.dataset.selected = node === button ? 'true' : 'false'; });
       renderTimeline(row); const draft = $('#draft'); draft.hidden = row.decision !== 'DRAFT_EMAIL'; if (row.draft) { $('#draft-title').textContent = `${row.company || 'Account'} / unsent sequence`; $('#draft-copy').textContent = row.draft.sequence?.[0]?.body || 'Draft content is available in the artifact.'; }
       $('#model-version').textContent = row.model_version || state.model_version || 'recorded proof'; $('#source-id').textContent = row.provenance?.[0]?.record_id || row.provenance?.[0]?.source || 'captured fixture'; $('#credit-use').textContent = `${row.credit_cost || 0} credits`; $('#event').textContent = `${row.company || 'Account'} → ${actionLabel(row.decision)}`; state.activity = Math.min(1, .25 + Number(row.confidence || 0) * .7);
@@ -1275,13 +1283,118 @@ resize: resize
       $('#featured-meta').textContent = `${provenance.source || 'recorded proof'} · ${provenance.record_id ?? 'no id'}`;
       updateHero(row);
     }
+    const Episode = {
+      state: { index: 0, step: 0, playing: false, timer: 0 },
+      steps() { return timelineSteps(state.rows[this.state.index] || {}); },
+      select(i) {
+        this.stop();
+        const rows = document.querySelectorAll('.row');
+        this.state.index = (i + state.rows.length) % state.rows.length;
+        this.state.step = 0;
+        selectRow(state.rows[this.state.index], rows[this.state.index]);
+        renderNeural(state.rows[this.state.index]);
+        this.showStep();
+      },
+      showStep() {
+        const steps = this.steps();
+        const s = steps[Math.min(this.state.step, steps.length - 1)] || ['—', ''];
+        document.querySelector('#episode-step').textContent = s[0];
+        const scrub = document.querySelector('#episode-scrub');
+        scrub.max = String(Math.max(steps.length - 1, 0));
+        scrub.value = String(this.state.step);
+      },
+      next() {
+        const steps = this.steps();
+        if (this.state.step < steps.length - 1) { this.state.step += 1; }
+        else { this.select(this.state.index + 1); return; }
+        renderVerdict(state.rows[this.state.index], this.state.step);
+        this.showStep();
+        this.schedule();
+      },
+      schedule() {
+        clearTimeout(this.state.timer);
+        if (!this.state.playing) return;
+        const steps = this.steps();
+        const hold = this.state.step >= steps.length - 1 ? 4000 : 3000;
+        this.state.timer = setTimeout(() => this.next(), hold);
+      },
+      play() { this.state.playing = true; this.schedule(); },
+      stop() { this.state.playing = false; clearTimeout(this.state.timer); }
+    };
+    function renderNeural(row) { renderFiring(row); renderVision(row); renderVerdict(row, 0); renderChecks(row); }
+    function renderFiring(row) {
+      const root = document.querySelector('#firing-list'); root.replaceChildren();
+      const items = SIGNAL_KEYS.map((key) => ({
+        key, energy: Math.max(0, Math.min(1, Number(row.signals?.[key] ?? 0.5))),
+        count: (state.channelPoints[key] || new Set()).size
+      })).sort((a, b) => b.energy - a.energy).slice(0, 8);
+      items.forEach(({ key, energy, count }) => {
+        const li = document.createElement('li'); li.className = 'firing-row';
+        li.textContent = `${key} · ${Math.round(energy * count)} spk`;
+        root.append(li);
+      });
+    }
+    function renderVision(row) {
+      const root = document.querySelector('#vision-strip'); root.replaceChildren();
+      root.style.gridTemplateColumns = 'repeat(6, minmax(0, 1fr))';
+      SIGNAL_KEYS.forEach((key) => {
+        const energy = Math.max(0, Math.min(1, Number(row.signals?.[key] ?? 0.5)));
+        const block = document.createElement('span'); block.className = 'vision-block';
+        block.style.cssText = 'height:auto;padding:5px 2px;font-family:ui-monospace,monospace;font-size:9px;font-weight:700;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+        block.dataset.key = key; block.style.setProperty('--fill', `${Math.round(energy * 100)}%`);
+        block.textContent = key;
+        root.append(block);
+      });
+    }
+    function renderVerdict(row, step) {
+      const pct = row.confidence == null ? '—' : `${Math.round(Number(row.confidence) * 100)}%`;
+      const side = Number(row.confidence || 0) >= 0.5 ? 'above' : 'below';
+      document.querySelector('#evidence-verdict').textContent =
+        `The fly says ${actionLabel(row.decision)} — confidence ${pct}, ${side} threshold 50%`;
+    }
+    function renderChecks(row) {
+      const hasResearch = row.policy_action === 'RESEARCH' || row.decision === 'RESEARCH' || !!row.enrichment;
+      const checks = [
+        ['Signals normalized', !!(row.provenance && row.provenance.length)],
+        ['Research budgeted', hasResearch],
+        ['Draft unsent', row.decision === 'DRAFT_EMAIL' ? !!row.draft : true],
+        ['Provenance attached', !!(row.provenance && row.provenance.length)]
+      ];
+      let host = document.querySelector('#review-checks');
+      if (!host) {
+        host = document.createElement('div'); host.id = 'review-checks';
+        document.querySelector('#evidence-verdict').after(host);
+      }
+  host.replaceChildren();
+  host.style.cssText = 'position:absolute;bottom:88px;left:50%;transform:translateX(-50%);z-index:3;display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:92%';
+  checks.forEach(([label, ok]) => {
+    const div = document.createElement('div');
+    div.className = `check-row ${ok ? 'pass' : 'fail'}`;
+    div.style.cssText = 'padding:6px 10px;border-radius:999px;background:rgba(255,253,249,.92);border:1px solid rgba(108,98,82,.18);color:#4d4842;font-size:10px;font-weight:700;white-space:nowrap';
+    div.textContent = `${ok ? 'Passed' : 'Failed'} — ${label}`;
+        host.append(div);
+      });
+    }
+    document.querySelector('#episode-play').addEventListener('click', () => {
+      const button = document.querySelector('#episode-play');
+      if (Episode.state.playing) { Episode.stop(); button.setAttribute('aria-pressed', 'false'); button.textContent = 'Play episode'; }
+      else { Episode.play(); button.setAttribute('aria-pressed', 'true'); button.textContent = 'Pause episode'; }
+    });
+    document.querySelector('#episode-scrub').addEventListener('input', (event) => {
+      Episode.stop();
+      document.querySelector('#episode-play').setAttribute('aria-pressed', 'false');
+      document.querySelector('#episode-play').textContent = 'Play episode';
+      Episode.state.step = Number(event.target.value);
+      renderVerdict(state.rows[Episode.state.index], Episode.state.step);
+      Episode.showStep();
+    });
     function replayRows(payload) {
       if (Array.isArray(payload.rows)) return payload.rows;
       return (payload.scenes || []).filter(scene => scene.kind === 'account').map((scene, index) => ({ company: scene.company, size: scene.employees, signal: scene.signal || 'Recorded signal', decision: scene.action === 'EMAIL' ? 'DRAFT_EMAIL' : scene.action === 'IGNORE' ? 'IGNORE' : 'RESEARCH', confidence: .5, provenance: [{ source: 'recorded proof', record_id: `scene-${index + 1}` }], model_version: 'recorded-proof' }));
     }
     async function run(mode) {
       state.mode = mode; $('#status-text').textContent = mode === 'replay' ? 'RECORDED' : 'LIVE / DRAFT-ONLY'; $('#run-button').disabled = true; $('#run-button').textContent = mode === 'replay' ? 'Loading proof…' : 'Running capped pass…'; $('#event').textContent = mode === 'replay' ? 'Loading versioned proof…' : 'Querying Clay read-only…';
-      try { const response = await fetch('/api/demo/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode, query: $('#clay-query').value, limit: 10 }) }); const payload = await response.json(); if (!response.ok) throw new Error(payload.error || 'Run failed'); state.rows = replayRows(payload); state.model_version = payload.model_version || state.rows[0]?.model_version; renderStats(state.rows); renderRows(state.rows); $('#queue-subtitle').textContent = mode === 'replay' ? 'Recorded showcase / deterministic replay' : 'Live Clay data / enrichment and drafts only'; $('#queue-label').textContent = mode === 'replay' ? 'READ-ONLY' : 'NO SEND'; $('#notice').textContent = mode === 'replay' ? 'This is a recorded proof path. It makes no network calls after loading.' : `Live Clay pass capped at ${payload.budget?.max_records || 10} records and ${payload.budget?.max_credits || 50} credits. No recipient or send action is created.`; $('#event').textContent = `${state.rows.length} records / ${mode === 'replay' ? 'replay' : 'live Clay episode'}`; } catch (error) { $('#event').textContent = 'Run unavailable; showing the safe empty state.'; $('#rows').replaceChildren(text('div', 'We could not reach the configured source. No action was taken.', 'empty')); } finally { $('#run-button').disabled = false; $('#run-button').textContent = 'Run draft-only pass'; }
+      try { const response = await fetch('/api/demo/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode, query: $('#clay-query').value, limit: 10 }) }); const payload = await response.json(); if (!response.ok) throw new Error(payload.error || 'Run failed'); state.rows = replayRows(payload); state.model_version = payload.model_version || state.rows[0]?.model_version; renderStats(state.rows); renderRows(state.rows); if (state.rows.length) Episode.select(0); if (state.rows.length && mode === 'replay') Episode.play(); document.querySelector('#episode-play').setAttribute('aria-pressed', String(mode === 'replay' && state.rows.length > 0)); document.querySelector('#episode-play').textContent = (mode === 'replay' && state.rows.length > 0) ? 'Pause episode' : 'Play episode'; $('#queue-subtitle').textContent = mode === 'replay' ? 'Recorded showcase / deterministic replay' : 'Live Clay data / enrichment and drafts only'; $('#queue-label').textContent = mode === 'replay' ? 'READ-ONLY' : 'NO SEND'; $('#notice').textContent = mode === 'replay' ? 'This is a recorded proof path. It makes no network calls after loading.' : `Live Clay pass capped at ${payload.budget?.max_records || 10} records and ${payload.budget?.max_credits || 50} credits. No recipient or send action is created.`; $('#event').textContent = `${state.rows.length} records / ${mode === 'replay' ? 'replay' : 'live Clay episode'}`; } catch (error) { $('#event').textContent = 'Run unavailable; showing the safe empty state.'; $('#rows').replaceChildren(text('div', 'We could not reach the configured source. No action was taken.', 'empty')); } finally { $('#run-button').disabled = false; $('#run-button').textContent = 'Run draft-only pass'; }
     }
     $('#replay-mode').addEventListener('click', () => { $('#replay-mode').setAttribute('aria-pressed', 'true'); $('#live-mode').setAttribute('aria-pressed', 'false'); run('replay'); }); $('#live-mode').addEventListener('click', () => { $('#replay-mode').setAttribute('aria-pressed', 'false'); $('#live-mode').setAttribute('aria-pressed', 'true'); run('live_draft'); }); $('#run-form').addEventListener('submit', (event) => { event.preventDefault(); run(state.mode); });
     const canvas = $('#brain'), ctx = canvas.getContext('2d');
