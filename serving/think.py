@@ -81,6 +81,10 @@ def build_think_response(signals: dict, decide_out: dict) -> dict:
     crowdedness = crowdedness_of(energies)
     decision = str(decide_out.get("decision", "RESEARCH"))
     recommendation, wait_days = recommend(decision, crowdedness)
+    observation = decide_out.get("observation") or []
+    slots = [bool(float(v) > 0.5) for v in observation][:16]
+    slots += [False] * (16 - len(slots))
+    sees = {"lit": sum(slots), "total": 16, "slots": slots}
     return {
         "energies": energies,
         "probabilities": _jsonable(decide_out.get("probabilities") or {}),
@@ -93,4 +97,6 @@ def build_think_response(signals: dict, decide_out: dict) -> dict:
         "reasons": build_reasons(energies, decide_out, crowdedness,
                                  wait_days),
         "sim_steps": int(decide_out.get("sim_steps", 0)),
+        "neuron_activity": decide_out.get("neuron_activity") or {},
+        "sees": sees,
     }

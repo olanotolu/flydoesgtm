@@ -70,3 +70,19 @@ def test_resolve_static_asset_finds_demo_png():
     assert found_demo is not None and found_demo.name == "clay-logo.png"
     assert resolve_static_asset("/demo/../serve.py") is None
     assert resolve_static_asset("/demo/sub/x.png") is None
+
+
+def test_decide_reports_real_neuron_activity():
+    from serving.serve import FlyService
+    svc = FlyService()
+    out = svc.decide({"funding": 0.97, "trigger": 0.92, "intent": 0.88,
+                      "hiring": 0.55, "job_change": 0.18, "negative": 0.04})
+    na = out["neuron_activity"]
+    assert na["steps"] == 4 and na["dt_ms"] == 20 and na["window_ms"] == 80
+    assert na["active"] >= 1 and na["spikes"] >= na["active"]
+    assert sum(na["per_step"]) == na["spikes"]
+    assert na["hz_max"] > 0
+    first = na["top"][0]
+    assert isinstance(first["id"], int) and first["label"]
+    assert first["spikes"] >= na["top"][-1]["spikes"]
+    assert len(out["observation"]) == 16

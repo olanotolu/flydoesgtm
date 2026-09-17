@@ -51,6 +51,35 @@ DEFAULT_QUERY = (
 )
 
 
+def neuron_activity_block(brain, spike_counts, per_step):
+    window_s = max(1e-6, len(per_step) * float(brain.dt))
+    top = []
+    for nid, spikes in sorted(spike_counts.items(),
+                              key=lambda kv: (-kv[1], kv[0]))[:8]:
+        idx = int(nid)
+        superclass = (str(brain.superclass[idx])
+                      if brain.superclass is not None else "")
+        label = str(brain.cell_type[idx]).strip() or superclass
+        top.append({
+            "id": idx,
+            "label": label,
+            "side": str(brain.side[idx]) if brain.side is not None else "",
+            "region": superclass,
+            "spikes": int(spikes),
+        })
+    rates = [c / window_s for c in spike_counts.values()] or [0.0]
+    return {
+        "steps": len(per_step),
+        "dt_ms": round(float(brain.dt) * 1000),
+        "window_ms": round(window_s * 1000),
+        "active": len(spike_counts),
+        "spikes": int(sum(spike_counts.values())),
+        "per_step": [int(c) for c in per_step],
+        "hz_max": float(np.ceil(max(rates) / 10.0) * 10.0),
+        "top": top,
+    }
+
+
 class FlyService:
     def __init__(self):
         self.brain = get_brain(batch=1, device="cpu")
@@ -152,8 +181,16 @@ class FlyService:
         obs[0, 14] = np.clip(budget / 100.0, 0, 2)
         obs[0, 15] = 0.5
 
+        spike_counts = {}
+        per_step = []
         for _ in range(SIM_STEPS):
             self.brain.step(inject=self.encoder.inject(obs, np.array([0]), 1))
+            fired = np.asarray(self.brain.fired).reshape(-1)
+            fired = fired[fired < self.brain.n]
+            per_step.append(int(fired.size))
+            for nid in np.unique(fired):
+                key = int(nid)
+                spike_counts[key] = spike_counts.get(key, 0) + 1
             self.trace.observe(self.brain)
         feat = torch.as_tensor(self.trace.features([0]))
         x = torch.as_tensor(obs)
@@ -180,6 +217,9 @@ class FlyService:
                       for a, c in zip(ACTIONS, costs)},
             "activity": np.round(
                 self.trace.trace[..., 0].reshape(-1), 4).tolist(),
+            "observation": np.round(obs[0], 4).tolist(),
+            "neuron_activity": neuron_activity_block(
+                self.brain, spike_counts, per_step),
             "neuron_count": self.brain.n,
             "connectome": "MaleCNS v1.0",
             "model_version": self.model_version,

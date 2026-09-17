@@ -59,3 +59,33 @@ def test_think_integration_real_brain():
     assert 0.0 <= body["confidence"] <= 1.0
     assert body["recommendation"] in ("YES", "NO", "WAIT")
     assert isinstance(body["reasons"], list) and body["reasons"]
+
+
+def test_think_passes_through_neuron_activity():
+    decide_out = {
+        "channel_activity": {}, "confidence": 0.9, "decision": "RESEARCH",
+        "probabilities": {}, "sim_steps": 4,
+        "observation": [0.9, 0.5, 0.8, 0.5, 0.1, 0.75] + [1.0, 0.5, 0.0, 0.0,
+                                                          1.0, 1.0, 1.0, 1.0,
+                                                          1.0, 0.5],
+        "neuron_activity": {
+            "steps": 4, "dt_ms": 20, "window_ms": 80, "active": 3, "spikes": 6,
+            "per_step": [1, 2, 1, 2], "hz_max": 50.0,
+            "top": [{"id": 10013, "label": "MBON01", "side": "R",
+                     "region": "cb_intrinsic", "spikes": 3}],
+        },
+    }
+    signals = {"funding": 0.9, "hiring": 0.5, "intent": 0.8,
+               "job_change": 0.5, "negative": 0.1, "trigger": 0.75}
+    body = build_think_response(signals, decide_out)
+    assert body["neuron_activity"]["active"] == 3
+    assert body["neuron_activity"]["top"][0]["label"] == "MBON01"
+    assert body["sees"]["total"] == 16
+    assert body["sees"]["lit"] == sum(1 for v in decide_out["observation"] if v > 0.5)
+
+
+def test_think_sees_defaults_when_observation_missing():
+    body = build_think_response(
+        {"funding": 0.9}, {"decision": "RESEARCH", "confidence": 0.9})
+    assert body["sees"]["total"] == 16
+    assert "neuron_activity" in body
