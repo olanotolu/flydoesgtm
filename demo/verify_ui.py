@@ -25,7 +25,7 @@ def main():
         page.wait_for_timeout(2500)
         assert page.locator("#think-bars .think-bar").count() == 6, "expected six sensory energy bars"
         assert page.locator("#think-readout .think-line").count() >= 3, "expected streamed reasoning lines"
-        assert "The fly says" in page.locator("#fly-decision-verdict").text_content()
+        assert "The fly says YES" in page.locator("#fly-decision-verdict").text_content()
         assert page.locator("#fly-decision-motion li").count() == 3, "expected three motion steps"
         page.set_viewport_size({"width": 390, "height": 844})
         page.wait_for_timeout(400)

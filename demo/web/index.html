@@ -93,10 +93,10 @@
     #fly3d { inset: auto; left: 50%; top: 47%; z-index: 2; width: 640px; max-width: 100%; height: 580px; transform: translate(-50%, -50%); }
     #brain3d { position: absolute; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; opacity: 0; transition: opacity .5s ease; }
     .review-fly-wrap.thinking #brain3d { opacity: 1; }
-    #think-bars { position: absolute; left: 0; bottom: 0; z-index: 3; display: grid; gap: 5px; width: 30%; }
+    #think-bars { display: grid; gap: 5px; width: min(100%, 470px); }
     .think-bar { height: 7px; border-radius: 4px; background: rgba(74,58,36,.14); overflow: hidden; }
     .think-bar i { display: block; height: 100%; width: 0; border-radius: 4px; background: linear-gradient(90deg, #3aa0e8, #7cc6f5); transition: width .45s ease; }
-    #think-readout { position: absolute; right: 0; bottom: 0; z-index: 3; display: grid; gap: 4px; max-width: 34%; color: #4a443c; font-size: 11px; font-weight: 600; text-align: right; }
+    #think-readout { display: grid; gap: 4px; width: min(100%, 470px); color: #4a443c; font-size: 11px; font-weight: 600; text-align: left; }
     #fly-decision { width: min(100%, 470px); padding: 14px 18px; border-radius: 16px; background: #fbf7ef; box-shadow: 0 20px 36px -28px rgba(66,53,34,.5), inset 0 1px rgba(255,255,255,.9); }
     #fly-decision[hidden] { display: none; }
     #fly-decision strong { display: block; font-size: 10px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; color: #8b857c; }
@@ -405,7 +405,7 @@
     @keyframes status-pulse { to { opacity: .25; transform: scale(.75); } }
     @media (max-width: 1080px) { .review-shell { padding-inline: 22px; } .review-flow { grid-template-columns: minmax(240px,290px) 52px minmax(340px,460px) 52px minmax(250px,300px); } .review-nav { gap: 18px; } }
     @media (max-width: 1080px) { .review-evidence { grid-template-columns: 1fr 1.2fr; } .activity-panel { grid-column: 1 / -1; min-height: 360px; } }
-    @media (max-width: 840px) { .review-screen { overflow: auto; } .review-shell { padding: 20px 16px 30px; } .review-logo { width: 105px; } .review-nav { display: none; } .review-question { margin-top: 34px; } .review-flow { grid-template-columns: 1fr; gap: 16px; min-height: 0; margin-top: 34px; } .review-paths, .review-stage-pill { display: none; } .review-left, .review-right { width: min(100%, 520px); justify-self: center; } .review-center { order: -1; } .review-fly-wrap { width: min(100%, 460px); } .review-caption { margin-top: 30px; } .review-evidence { grid-template-columns: 1fr; margin-top: 48px; } .activity-panel { grid-column: auto; } .decision-proof { flex-direction: column; gap: 8px; } #think-bars, #think-readout { position: static; width: 100%; max-width: none; } #think-readout { text-align: right; } }
+    @media (max-width: 840px) { .review-screen { overflow: auto; } .review-shell { padding: 20px 16px 30px; } .review-logo { width: 105px; } .review-nav { display: none; } .review-question { margin-top: 34px; } .review-flow { grid-template-columns: 1fr; gap: 16px; min-height: 0; margin-top: 34px; } .review-paths, .review-stage-pill { display: none; } .review-left, .review-right { width: min(100%, 520px); justify-self: center; } .review-center { order: -1; } .review-fly-wrap { width: min(100%, 460px); } .review-caption { margin-top: 30px; } .review-evidence { grid-template-columns: 1fr; margin-top: 48px; } .activity-panel { grid-column: auto; } .decision-proof { flex-direction: column; gap: 8px; } }
   </style>
 </head>
 <body>
@@ -463,8 +463,6 @@
             <span class="review-key-label yes" aria-hidden="true">YES</span><span class="review-key-label no" aria-hidden="true">NO</span>
             <div class="review-status" id="review-status" aria-live="polite">reading market signals</div>
           </div>
-          <div id="think-bars" aria-label="Sensory input energies"></div>
-          <div id="think-readout" aria-live="polite"></div>
           <div class="reasoning-card">
             <div class="reasoning-head"><span class="reasoning-mark" aria-hidden="true">✦</span><strong>Reasoning</strong><span class="model-chip">fly · recorded</span></div>
             <div class="reasoning-body">
@@ -473,6 +471,8 @@
               <span class="score-chip">92/100</span>
             </div>
           </div>
+          <div id="think-bars" aria-label="Sensory input energies"></div>
+          <div id="think-readout" aria-live="polite"></div>
           <div id="fly-decision" hidden><strong id="fly-decision-title">FLY DECISION</strong><p id="fly-decision-verdict"></p><p id="fly-decision-confidence"></p><p id="fly-decision-why"></p><ul id="fly-decision-motion"></ul></div>
           <button id="think-run" type="button">RUN the fly</button>
         </div>
@@ -500,14 +500,14 @@
             <div class="firing-row"><strong>FUNDING</strong><span>recorded model input</span><em>0.97</em></div>
             <div class="firing-row"><strong>TRIGGER</strong><span>recorded model input</span><em>0.92</em></div>
             <div class="firing-row"><strong>INTENT</strong><span>recorded model input</span><em>0.88</em></div>
-            <div class="firing-row"><strong>HIRING</strong><span>recorded model input</span><em>0.81</em></div>
+            <div class="firing-row"><strong>HIRING</strong><span>recorded model input</span><em>0.55</em></div>
             <div class="firing-row"><strong>JOB_CHANGE</strong><span>recorded model input</span><em>0.18</em></div>
             <div class="firing-row"><strong>NEGATIVE</strong><span>recorded model input</span><em>0.04</em></div>
           </div>
         </aside>
         <div class="evidence-fly-stage">
           <div class="evidence-verdict" id="evidence-verdict">qualified for action</div>
-          <span class="evidence-key yes" aria-hidden="true">YES</span><span class="evidence-key no" aria-hidden="true">NO</span>
+          <img class="evidence-fly" src="../clay-fly-clean.png" alt="Fly decision model inspection">
         </div>
         <aside class="evidence-panel activity-panel">
           <div class="activity-head"><h3>Recorded model evidence</h3><span class="activity-time" id="activity-time">92.00%</span></div>
@@ -614,7 +614,7 @@
   <script>
     const $ = (selector) => document.querySelector(selector);
     const SIGNAL_KEYS = ['funding', 'hiring', 'intent', 'job_change', 'negative', 'trigger'];
-    const SIGNAL_PACK = { energies: { funding: .97, trigger: .92, intent: .88, hiring: .81, job_change: .18, negative: .04 } };
+    const SIGNAL_PACK = { energies: { funding: .97, trigger: .92, intent: .88, hiring: .55, job_change: .18, negative: .04 } };
     const state = { graph: null, channelPoints: {} };
     function actionLabel(action) { return action === 'DRAFT_EMAIL' ? 'DRAFT EMAIL' : action || '—'; }
     async function buildBrainPoints() {
@@ -694,7 +694,7 @@
           readout.append(p);
         }, 120 * i);
       });
-      const verdict = `The fly says ${think.recommendation === 'WAIT' ? 'WAIT' : actionLabel(think.decision)} — confidence ${Math.round(think.confidence * 100)}%, ${think.confidence >= .5 ? 'above' : 'below'} threshold 50%`;
+      const verdict = `The fly says ${think.recommendation === 'WAIT' ? 'WAIT' : actionLabel(think.recommendation)} — confidence ${Math.round(think.confidence * 100)}%, ${think.confidence >= .5 ? 'above' : 'below'} threshold 50%`;
       const why = `Why: ${think.reasons.slice(0, 2).join(' · ')}`;
       const motion = think.recommendation === 'WAIT'
         ? ['Step 1 — Find ICPs: enterprise AI companies', 'Step 2 — Enrich: GTM and platform buyers', `Step 3 — WAIT ${think.wait_days} days — attention contested, no send path`]
@@ -758,7 +758,7 @@
       const intro = document.getElementById('intro-screen');
       const start = document.getElementById('intro-start');
       if (!intro || !start) return;
-      const SIGNAL = { channel: 'news', confidence: .92, recordId: '771663592', source: 'clay_search', model: 'fly-d02b5f73fb9903ff43dcaa384e3247ef574dbfa7-10000', signals: { funding: .97, trigger: .92, intent: .88, hiring: .81, job_change: .18, negative: .04 } };
+      const SIGNAL = { channel: 'news', confidence: .92, recordId: '771663592', source: 'clay_search', model: 'fly-d02b5f73fb9903ff43dcaa384e3247ef574dbfa7-10000', signals: { funding: .97, trigger: .92, intent: .88, hiring: .55, job_change: .18, negative: .04 } };
       const drawProofBrain = (signal) => {
         const canvas = document.getElementById('brain-map');
         if (!canvas || !signal) return;
