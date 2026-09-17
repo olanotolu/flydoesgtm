@@ -1,0 +1,47 @@
+[
+  {
+    "arm": "fly",
+    "return": 98.08991241455078,
+    "meetings": 3,
+    "replies": 5,
+    "opportunities": 1,
+    "closed": 1,
+    "unsubscribes": 1,
+    "spam": 1,
+    "emails": 20,
+    "escalations": 0,
+    "researches": 9,
+    "enriches": 0,
+    "spent": 121.30018615722656
+  },
+  {
+    "arm": "half_features_lesioned",
+    "return": 363.9500732421875,
+    "meetings": 7,
+    "replies": 12,
+    "opportunities": 4,
+    "closed": 3,
+    "unsubscribes": 2,
+    "spam": 2,
+    "emails": 37,
+    "escalations": 0,
+    "researches": 10,
+    "enriches": 0,
+    "spent": 207.75015258789062
+  },
+  {
+    "arm": "shuffled_features",
+    "return": 0.0,
+    "meetings": 0,
+    "replies": 0,
+    "opportunities": 0,
+    "closed": 0,
+    "unsubscribes": 0,
+    "spam": 0,
+    "emails": 0,
+    "escalations": 0,
+    "researches": 0,
+    "enriches": 0,
+    "spent": 0.0
+  }
+]

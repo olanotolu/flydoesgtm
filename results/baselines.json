@@ -1,0 +1,47 @@
+[
+  {
+    "policy": "wait",
+    "return": -9.0,
+    "meetings": 0,
+    "replies": 0,
+    "opportunities": 0,
+    "closed": 0,
+    "unsubscribes": 0,
+    "spam": 0,
+    "emails": 0,
+    "escalations": 0,
+    "researches": 0,
+    "enriches": 0,
+    "spent": 0
+  },
+  {
+    "policy": "rules",
+    "return": 50.25,
+    "meetings": 3,
+    "replies": 7,
+    "opportunities": 1,
+    "closed": 1,
+    "unsubscribes": 3,
+    "spam": 1,
+    "emails": 25,
+    "escalations": 0,
+    "researches": 135,
+    "enriches": 0,
+    "spent": 395
+  },
+  {
+    "policy": "random",
+    "return": -115.3799819946289,
+    "meetings": 2,
+    "replies": 5,
+    "opportunities": 1,
+    "closed": 0,
+    "unsubscribes": 5,
+    "spam": 1,
+    "emails": 16,
+    "escalations": 15,
+    "researches": 14,
+    "enriches": 17,
+    "spent": 350
+  }
+]

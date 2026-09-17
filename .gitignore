@@ -1,0 +1,26 @@
+.venv/
+__pycache__/
+.env
+.env.local
+.DS_Store
+*.pyc
+modal.toml
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+playwright-report/
+test-results/
+node_modules/
+dist/
+build/
+artifacts/
+runs/
+*.log
+*.sqlite3
+*.db
+results/*.pt
+results/*.npz
+clay entropy/clay_entropy.sqlite3
+clay entropy/exports/

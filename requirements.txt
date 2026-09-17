@@ -1,0 +1,6 @@
+flybrain
+numpy
+scipy
+torch
+pytest
+modal
