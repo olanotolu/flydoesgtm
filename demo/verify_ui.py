@@ -1,6 +1,4 @@
-"""Small browser smoke test for the recorded, no-send showcase."""
-import time
-
+"""Small browser smoke test for the single-screen recorded, no-send showcase."""
 from playwright.sync_api import sync_playwright
 
 URL = "http://127.0.0.1:8090"
@@ -14,42 +12,28 @@ def main():
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(URL, wait_until="networkidle")
         page.keyboard.press("Enter")
-        page.wait_for_selector(".row", timeout=60000)
-        rows = page.locator(".row")
-        assert rows.count() == 5, f"expected five recorded rows, got {rows.count()}"
-        assert page.locator("#accounts").text_content().strip() == "5"
-        assert page.locator("#queue-label").text_content().strip() == "READ-ONLY"
-        assert page.locator("svg#clayfly").count() == 1, "clay fly artwork is not inlined"
-        assert page.locator(".signal-card").count() == 5, "expected five signal source cards"
-        assert page.locator(".exec-card").count() == 4, "expected four execution cards"
-        assert page.locator("#hero-account").text_content().strip() == "Feastables"
-        try:
-            page.wait_for_function("document.querySelector('#hero-account').textContent.trim() === 'Big Chicken'", timeout=45000)
-        except Exception:
-            end = time.monotonic() + 45
-            while page.locator("#hero-account").text_content().strip() != "Big Chicken":
-                if time.monotonic() > end:
-                    raise AssertionError("autoplay did not advance to Big Chicken")
-                page.wait_for_timeout(500)
-        rows.nth(0).click()
-        assert page.locator("#timeline").locator(".step").count() >= 3
-        assert page.locator("#contact-state").text_content().strip() == "NO SEND PATH"
-        assert page.locator("#hero-account").text_content().strip() == "Feastables"
-        assert "RESEARCH" in page.locator("#hero-decision").text_content()
-        assert page.locator(".clay-button.is-pressed").count() == 1, "exactly one decision button must be pressed"
-        rows.nth(1).click()
-        assert page.locator("#hero-account").text_content().strip() == "Big Chicken"
-        page.wait_for_selector("#episode-play", timeout=10000)
+        page.wait_for_selector("#review-question", timeout=60000)
+        assert page.locator(".signal-det h2").text_content().strip() == "Anthropic launches Fable 5.1 and Mythos 5.1"
+        assert page.locator(".signal-tags span").count() == 4, "expected four signal tags"
+        assert page.locator(".source-card").count() == 5, "expected five listening sources"
+        assert page.locator(".action-card").count() == 4, "expected four GTM plan steps"
+        assert page.locator("#firing-list .firing-row").count() >= 1, "expected firing signal rows"
+        assert page.locator("#decision-chip").text_content().strip() != ""
         assert page.locator("#evidence-verdict").text_content().strip() != ""
-        assert "the fly says" in page.locator("#evidence-verdict").text_content().lower()
-        assert page.locator("#firing-list .firing-row").count() >= 1
-        assert page.locator("#vision-strip .vision-block").count() == 6
-        assert page.locator(".check-row").count() == 4
-        page.locator("#live-mode").click()
-        assert page.locator("#live-mode").get_attribute("aria-pressed") == "true"
+        page.locator("#think-run").click()
+        page.wait_for_selector("#fly-decision:not([hidden])", timeout=30000)
+        page.wait_for_timeout(2500)
+        assert page.locator("#think-bars .think-bar").count() == 6, "expected six sensory energy bars"
+        assert page.locator("#think-readout .think-line").count() >= 3, "expected streamed reasoning lines"
+        assert "The fly says" in page.locator("#fly-decision-verdict").text_content()
+        assert page.locator("#fly-decision-motion li").count() == 3, "expected three motion steps"
+        page.set_viewport_size({"width": 390, "height": 844})
+        page.wait_for_timeout(400)
+        scroll_width = page.evaluate("() => document.documentElement.scrollWidth")
+        assert scroll_width <= 390, f"mobile horizontal overflow: {scroll_width}"
         assert not errors, errors
         browser.close()
-    print("UI VERIFIED: recorded proof, clay hero wiring, timeline, live toggle, and no-send state")
+    print("UI VERIFIED: single-screen review flow, ported RUN thinking theater, no page errors")
 
 
 if __name__ == "__main__":
