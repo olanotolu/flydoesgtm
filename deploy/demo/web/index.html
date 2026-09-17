@@ -245,11 +245,11 @@
     .intro-brand .mark { top: 79px; left: 42px; width: 98px; height: 24px; background: #35b9f3; }
     .intro-byline { position: absolute; left: 294px; bottom: 0; display: flex; align-items: center; justify-content: center; gap: 5px; margin: 0; color: #111; font-family: "Helvetica Neue", Helvetica, sans-serif; font-size: 13px; }
     .intro-byline img { display: block; width: 68px; height: auto; }
-    .intro-visual { position: relative; width: min(61vh, 620px, 88vw); aspect-ratio: 1398 / 1125; align-self: start; margin-top: 6px; }
-    .intro-art { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 20px 16px rgba(32,25,13,.12)); }
-    .key-label { position: absolute; top: 11%; z-index: 1; color: #2b2925; font-family: "Helvetica Neue", Helvetica, sans-serif; font-size: clamp(10px, 1.05vw, 13px); font-weight: 500; line-height: 1; transform: translate(-50%, -50%); pointer-events: none; }
-    .key-label.yes { left: 32.2%; }
-    .key-label.no { left: 67.8%; }
+    .intro-visual { position: relative; width: min(61vh, 620px, 88vw); aspect-ratio: 1312 / 1199; align-self: start; margin-top: 6px; }
+    .intro-art { position: relative; z-index: 1; display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 20px 16px rgba(32,25,13,.12)); }
+    .key-label { position: absolute; top: 2%; z-index: 0; display: grid; width: 19%; aspect-ratio: 1; place-items: center; border: 1px solid #ded6c8; border-radius: 18%; background: linear-gradient(145deg,#fffdf7,#e8e0d4); color: #2b2925; font-family: "Helvetica Neue", Helvetica, sans-serif; font-size: clamp(10px, 1.05vw, 13px); font-weight: 700; line-height: 1; box-shadow: 0 9px 0 #d2c9ba, 0 18px 24px -16px rgba(62,49,31,.48), inset 0 2px rgba(255,255,255,.9); transform: translate(-50%, -22%); pointer-events: none; }
+    .key-label.yes { left: 22.6%; }
+    .key-label.no { left: 77.7%; }
     .intro-actions { display: flex; flex-direction: column; align-items: center; gap: 12px; padding-bottom: 1px; }
     .intro-start { position: relative; min-width: 260px; border: 0; border-radius: 3px; padding: 19px 54px 20px 32px; background: #35b9f3; color: #071821; font-family: "Helvetica Neue", Helvetica, sans-serif; font-size: 18px; font-weight: 650; letter-spacing: -.025em; box-shadow: 7px 7px 0 #ff6474, 13px 13px 0 #ffd23f; transition: transform .18s ease, box-shadow .18s ease, background .18s ease; animation: clay-button-breathe 3.2s ease-in-out infinite; }
     .intro-start::after { position: absolute; right: 25px; top: 50%; content: "→"; font-size: 21px; transform: translateY(-52%); transition: transform .18s ease; }
@@ -293,11 +293,11 @@
     .review-stage-pill.analyze { color: #407494; background: #dbeaf5; }
     .review-stage-pill.execute { color: #3d764b; background: #dcebd9; }
     .review-center { display: grid; place-items: center; }
-    .review-fly-wrap { position: relative; width: min(100%, 510px); aspect-ratio: 1398 / 1125; }
-    .review-fly { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 24px 18px rgba(52,43,30,.14)); }
-    .review-key-label { position: absolute; top: 11%; z-index: 2; font-size: 12px; font-weight: 800; transform: translate(-50%,-50%); }
-    .review-key-label.yes { left: 32.2%; }
-    .review-key-label.no { left: 67.8%; }
+    .review-fly-wrap { position: relative; width: min(100%, 510px); aspect-ratio: 1312 / 1199; }
+    .review-fly { position: relative; z-index: 1; display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 24px 18px rgba(52,43,30,.14)); }
+    .review-key-label { position: absolute; top: 2%; z-index: 0; display: grid; width: 19%; aspect-ratio: 1; place-items: center; border: 1px solid #ded6c8; border-radius: 18%; background: linear-gradient(145deg,#fffdf7,#e8e0d4); color: #302d28; font-size: 12px; font-weight: 800; box-shadow: 0 8px 0 #d2c9ba, 0 17px 22px -16px rgba(62,49,31,.46), inset 0 2px rgba(255,255,255,.9); transform: translate(-50%,-22%); }
+    .review-key-label.yes { left: 22.6%; }
+    .review-key-label.no { left: 77.7%; }
     .review-status { position: absolute; bottom: 2%; left: 50%; min-width: 210px; padding: 9px 16px; border-radius: 999px; background: #fff8e7; color: #9b6516; font-size: 11px; font-weight: 750; text-align: center; transform: translateX(-50%); box-shadow: 0 10px 20px -15px rgba(53,42,25,.45); }
     .review-status::before { display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: currentColor; content: ""; }
     .review-flow.is-processing .review-status::before { animation: status-pulse .7s ease-in-out infinite alternate; }
@@ -325,9 +325,9 @@
     .evidence-fly-stage { position: relative; display: grid; min-height: 470px; place-items: center; overflow: hidden; border-radius: 26px; background-color: rgba(255,253,249,.5); background-image: linear-gradient(rgba(117,106,90,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(117,106,90,.07) 1px, transparent 1px); background-size: 28px 28px; }
     .evidence-fly-stage::after { position: absolute; right: 12%; bottom: 7%; left: 12%; height: 30px; border-radius: 50%; background: radial-gradient(closest-side, rgba(61,49,32,.18), transparent); content: ""; }
     .evidence-fly { position: relative; z-index: 1; display: block; width: min(94%, 600px); filter: drop-shadow(0 22px 16px rgba(49,39,27,.12)); }
-    .evidence-key { position: absolute; top: 12.5%; z-index: 3; color: #302d28; font-size: 11px; font-weight: 800; transform: translate(-50%,-50%); }
-    .evidence-key.yes { left: 33.3%; }
-    .evidence-key.no { left: 66.7%; }
+    .evidence-key { position: absolute; top: 6%; z-index: 0; display: grid; width: 13%; aspect-ratio: 1; place-items: center; border: 1px solid #ded6c8; border-radius: 18%; background: linear-gradient(145deg,#fffdf7,#e8e0d4); color: #302d28; font-size: 11px; font-weight: 800; box-shadow: 0 7px 0 #d2c9ba, 0 15px 20px -15px rgba(62,49,31,.46), inset 0 2px rgba(255,255,255,.9); transform: translate(-50%,-22%); }
+    .evidence-key.yes { left: 25%; }
+    .evidence-key.no { left: 75%; }
     .evidence-verdict { position: absolute; bottom: 18px; left: 50%; z-index: 2; display: flex; align-items: center; gap: 9px; padding: 10px 16px; border: 1px solid rgba(55,153,94,.18); border-radius: 999px; background: #f1faf3; color: #35734a; font-size: 11px; font-weight: 750; transform: translateX(-50%); }
     .evidence-verdict::before { display: grid; width: 18px; height: 18px; place-items: center; border-radius: 50%; background: #d9f1df; content: "✓"; font-size: 11px; }
     .activity-head { display: flex; justify-content: space-between; gap: 12px; }
@@ -357,10 +357,10 @@
     <div class="intro-inner">
       <div class="intro-heading">
         <h1 class="intro-brand" id="intro-title"><span class="fly-word">Fly</span><span class="mark" aria-hidden="true"></span><span class="gtm-word">GTM</span></h1>
-        <p class="intro-byline">by <img src="../clay-logo.png" alt="Clay" onerror="this.style.display='none'"></p>
+        <p class="intro-byline">by <img src="../clay-logo.png" alt="Clay"></p>
       </div>
       <div class="intro-visual">
-        <img class="intro-art" src="../fly-review-fly.png" alt="A blue and yellow clay fly holding two decision buttons" onerror="this.style.display='none'">
+        <img class="intro-art" src="../clay-fly-clean.png" alt="A blue and yellow clay fly">
         <span class="key-label yes" aria-hidden="true">YES</span>
         <span class="key-label no" aria-hidden="true">NO</span>
       </div>
@@ -373,7 +373,7 @@
   <section class="review-screen" id="review-screen" aria-labelledby="review-question">
     <div class="review-shell">
       <header class="review-header">
-        <img class="review-logo" src="../clay-logo.png" alt="Clay" onerror="this.style.display='none'">
+        <img class="review-logo" src="../clay-logo.png" alt="Clay">
         <span class="review-mode">GTM on autopilot</span>
       </header>
       <h1 class="review-question" id="review-question">should we go to market?</h1>
@@ -396,7 +396,7 @@
         <span class="review-stage-pill analyze">Analyze</span>
         <div class="review-center">
           <div class="review-fly-wrap">
-            <img class="review-fly" src="../fly-review-fly.png" alt="Fly reviewing GTM signals" onerror="this.style.display='none'">
+            <img class="review-fly" src="../clay-fly-clean.png" alt="Fly reviewing GTM signals">
             <span class="review-key-label yes" aria-hidden="true">YES</span><span class="review-key-label no" aria-hidden="true">NO</span>
             <div class="review-status" id="review-status" aria-live="polite">reading market signals</div>
           </div>
@@ -425,7 +425,7 @@
         </aside>
         <div class="evidence-fly-stage">
           <div class="evidence-verdict" id="evidence-verdict">qualified for action</div>
-          <img class="evidence-fly" src="../fly-review-fly.png" alt="Fly decision model inspection" onerror="this.style.display='none'">
+          <img class="evidence-fly" src="../clay-fly-clean.png" alt="Fly decision model inspection">
           <span class="evidence-key yes" aria-hidden="true">YES</span><span class="evidence-key no" aria-hidden="true">NO</span>
         </div>
         <aside class="evidence-panel activity-panel">
@@ -1505,6 +1505,7 @@ resize: resize
           status.textContent = signal.result;
           const actions = document.querySelectorAll('.action-card');
           actions.forEach((node, index) => node.classList.toggle('is-live', index <= signal.live));
+          if (neuralLocked) return;
           document.getElementById('active-signal-count').textContent = Object.keys(signal.signals).length;
           document.getElementById('spike-count').textContent = signal.recordId;
           document.getElementById('activity-time').textContent = `${(signal.confidence * 100).toFixed(2)}%`;
