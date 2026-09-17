@@ -52,3 +52,17 @@ def test_real_fields_are_preserved_without_inference():
     })
     assert raw["total_funding_usd"] == 3e6
     assert raw["open_roles"] == 7
+
+
+def test_resolve_static_asset_guards_traversal():
+    from serving.serve import resolve_static_asset
+    assert resolve_static_asset("/nope.png") is None
+    assert resolve_static_asset("/../serve.py") is None
+    assert resolve_static_asset("/demo/web/index.html") is None
+    assert resolve_static_asset("/api/demo/run") is None
+
+
+def test_resolve_static_asset_finds_demo_png():
+    from serving.serve import resolve_static_asset
+    found = resolve_static_asset("/clay-logo.png")
+    assert found is not None and found.name == "clay-logo.png"

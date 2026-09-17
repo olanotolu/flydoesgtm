@@ -345,6 +345,16 @@ class FlyService:
         }
 
 
+def resolve_static_asset(path: str) -> Path | None:
+    if not path.startswith("/") or not path.endswith(".png"):
+        return None
+    name = path[1:]
+    if "/" in name or name.startswith("."):
+        return None
+    asset = ROOT / "demo" / name
+    return asset if asset.is_file() else None
+
+
 class Handler(BaseHTTPRequestHandler):
     service = None
 
@@ -393,6 +403,13 @@ class Handler(BaseHTTPRequestHandler):
                 query = qs.get("query", [DEFAULT_QUERY])[0]
                 limit = min(int(qs.get("limit", [str(MAX_RECORDS)])[0]), MAX_RECORDS)
                 self.send_json(200, self.service.live(query, limit))
+            elif (asset := resolve_static_asset(path)) is not None:
+                body = asset.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "image/png")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
             else:
                 page = ROOT / "demo" / "web" / "index.html"
                 body = page.read_bytes()
