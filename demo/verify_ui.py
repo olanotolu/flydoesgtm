@@ -11,6 +11,7 @@ def main():
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(URL, wait_until="networkidle")
+        page.keyboard.press("Enter")
         page.wait_for_selector(".row", timeout=60000)
         rows = page.locator(".row")
         assert rows.count() == 5, f"expected five recorded rows, got {rows.count()}"
@@ -27,6 +28,13 @@ def main():
         assert page.locator(".clay-button.is-pressed").count() == 1, "exactly one decision button must be pressed"
         rows.nth(1).click()
         assert page.locator("#hero-account").text_content().strip() == "Big Chicken"
+        page.wait_for_selector("#episode-play", timeout=10000)
+        assert page.locator("#evidence-verdict").text_content().strip() != ""
+        assert "the fly says" in page.locator("#evidence-verdict").text_content().lower()
+        assert page.locator("#firing-list .firing-row").count() >= 1
+        assert page.locator("#vision-strip .vision-block").count() == 6
+        assert page.locator(".check-row").count() == 4
+        page.wait_for_function("document.querySelector('#hero-account').textContent.trim() === 'Big Chicken'", timeout=45000)
         page.locator("#live-mode").click()
         assert page.locator("#live-mode").get_attribute("aria-pressed") == "true"
         assert not errors, errors
