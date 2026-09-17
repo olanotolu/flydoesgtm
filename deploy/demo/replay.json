@@ -1,0 +1,68 @@
+{
+  "mode": "recorded_clay_capture",
+  "safe_to_contact": false,
+  "query": "US restaurant and food-service operators from Clay Search",
+  "model_version": "fly-d02b5f73fb9903ff43dcaa384e3247ef574dbfa7-10000",
+  "rows": [
+    {
+      "company": "Feastables",
+      "title": "Co-Founder",
+      "location": "Greenville, North Carolina",
+      "signal": "Clay Search role match",
+      "decision": "RESEARCH",
+      "policy_action": "RESEARCH",
+      "confidence": 0.9123,
+      "signals": {"funding": 0.5, "hiring": 0.5, "intent": 0.5, "job_change": 0.5, "negative": 0.5, "trigger": 0.5},
+      "provenance": [{"source": "clay_search", "record_id": 771663592}],
+      "model_version": "fly-d02b5f73fb9903ff43dcaa384e3247ef574dbfa7-10000"
+    },
+    {
+      "company": "Big Chicken",
+      "title": "Founder & Chairman",
+      "location": "Atlanta, Georgia",
+      "signal": "Clay Search role match",
+      "decision": "RESEARCH",
+      "policy_action": "RESEARCH",
+      "confidence": 0.9208,
+      "signals": {"funding": 0.5, "hiring": 0.5, "intent": 0.5, "job_change": 0.5, "negative": 0.5, "trigger": 0.5},
+      "provenance": [{"source": "clay_search", "record_id": 293990196}],
+      "model_version": "fly-d02b5f73fb9903ff43dcaa384e3247ef574dbfa7-10000"
+    },
+    {
+      "company": "Marcus Samuelsson Group",
+      "title": "Owner",
+      "location": "New York, New York",
+      "signal": "Clay Search role match",
+      "decision": "RESEARCH",
+      "policy_action": "RESEARCH",
+      "confidence": 0.9207,
+      "signals": {"funding": 0.5, "hiring": 0.5, "intent": 0.5, "job_change": 0.5, "negative": 0.5, "trigger": 0.5},
+      "provenance": [{"source": "clay_search", "record_id": 537989979}],
+      "model_version": "fly-d02b5f73fb9903ff43dcaa384e3247ef574dbfa7-10000"
+    },
+    {
+      "company": "Slutty Vegan ATL",
+      "title": "Owner",
+      "location": "Atlanta, Georgia",
+      "signal": "Clay Search role match",
+      "decision": "RESEARCH",
+      "policy_action": "RESEARCH",
+      "confidence": 0.908,
+      "signals": {"funding": 0.5, "hiring": 0.5, "intent": 0.5, "job_change": 0.5, "negative": 0.5, "trigger": 0.5},
+      "provenance": [{"source": "clay_search", "record_id": 377382020}],
+      "model_version": "fly-d02b5f73fb9903ff43dcaa384e3247ef574dbfa7-10000"
+    },
+    {
+      "company": "Restaurant HR Group, Inc.",
+      "title": "Founder & CEO",
+      "location": "Mount Prospect, Illinois",
+      "signal": "Clay Search role match",
+      "decision": "RESEARCH",
+      "policy_action": "RESEARCH",
+      "confidence": 0.9208,
+      "signals": {"funding": 0.5, "hiring": 0.5, "intent": 0.5, "job_change": 0.5, "negative": 0.5, "trigger": 0.5},
+      "provenance": [{"source": "clay_search", "record_id": 307289152}],
+      "model_version": "fly-d02b5f73fb9903ff43dcaa384e3247ef574dbfa7-10000"
+    }
+  ]
+}

@@ -24,3 +24,4 @@ results/*.pt
 results/*.npz
 clay entropy/clay_entropy.sqlite3
 clay entropy/exports/
+.vercel
