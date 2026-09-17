@@ -1282,9 +1282,10 @@ resize: resize
       const provenance = (row.provenance || [])[0] || {};
       $('#featured-meta').textContent = `${provenance.source || 'recorded proof'} · ${provenance.record_id ?? 'no id'}`;
       updateHero(row);
+      renderNeural(row);
     }
     const Episode = {
-      state: { index: 0, step: 0, playing: false, timer: 0 },
+      state: { index: 0, step: 0, playing: false, timer: 0, owned: false },
       steps() { return timelineSteps(state.rows[this.state.index] || {}); },
       select(i) {
         this.stop();
@@ -1321,7 +1322,7 @@ resize: resize
       play() { this.state.playing = true; this.schedule(); },
       stop() { this.state.playing = false; clearTimeout(this.state.timer); }
     };
-    function renderNeural(row) { renderFiring(row); renderVision(row); renderVerdict(row, 0); renderChecks(row); }
+    function renderNeural(row) { Episode.state.owned = true; renderFiring(row); renderVision(row); renderVerdict(row, 0); renderChecks(row); }
     function renderFiring(row) {
       const root = document.querySelector('#firing-list'); root.replaceChildren();
       const items = SIGNAL_KEYS.map((key) => ({
@@ -1499,6 +1500,7 @@ resize: resize
           card.classList.remove('is-swapping');
         }, 220);
         window.setTimeout(() => {
+          const neuralLocked = typeof Episode !== 'undefined' && Episode.state.owned;
           flow.classList.remove('is-processing');
           status.textContent = signal.result;
           const actions = document.querySelectorAll('.action-card');
@@ -1507,13 +1509,15 @@ resize: resize
           document.getElementById('spike-count').textContent = signal.recordId;
           document.getElementById('activity-time').textContent = `${(signal.confidence * 100).toFixed(2)}%`;
           document.getElementById('meter-fill').style.width = `${signal.confidence * 100}%`;
-          document.getElementById('evidence-verdict').textContent = `${signal.result.split(' — ')[0].toLowerCase()} · ${(signal.confidence * 100).toFixed(1)}%`;
+          if (!neuralLocked) document.getElementById('evidence-verdict').textContent = `${signal.result.split(' — ')[0].toLowerCase()} · ${(signal.confidence * 100).toFixed(1)}%`;
           document.getElementById('decision-chip').textContent = `✓ ${signal.result.split(' — ')[0]}`;
           document.getElementById('decision-copy').textContent = `${signal.company} was scored from recorded Clay record ${signal.recordId}; no outreach was sent.`;
           document.getElementById('proof-source').textContent = signal.source;
           document.getElementById('proof-model').textContent = signal.model;
-          const firing = document.getElementById('firing-list'); firing.replaceChildren();
+          const firing = document.getElementById('firing-list');
+          if (!neuralLocked) firing.replaceChildren();
           Object.entries(signal.signals).forEach(([key, value]) => {
+            if (neuralLocked) return;
             const row = document.createElement('div'); row.className = 'firing-row';
             const name = document.createElement('strong'); name.textContent = key.toUpperCase();
             const source = document.createElement('span'); source.textContent = 'recorded model input';
