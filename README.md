@@ -52,6 +52,15 @@ The fly has to learn qualification, not maximize emails.
 open http://127.0.0.1:8090
 ```
 
+The hosted replay is available at [clayfly.vercel.app](https://clayfly.vercel.app).
+It serves the captured Clay proof without credentials or live enrichment; the
+full live-draft path remains the local/server deployment described below.
+To redeploy the lightweight hosted surface:
+
+```bash
+(cd deploy && vercel --prod)
+```
+
 The local server exposes a recorded proof path by default:
 
 - **Live Clay mode** is an explicit toggle — a capped read-only search can
