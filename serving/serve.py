@@ -349,7 +349,9 @@ def resolve_static_asset(path: str) -> Path | None:
     if not path.startswith("/") or not path.endswith(".png"):
         return None
     name = path[1:]
-    if "/" in name or name.startswith("."):
+    if name.startswith("demo/"):
+        name = name[len("demo/"):]
+    if "/" in name or name.startswith(".") or not name:
         return None
     asset = ROOT / "demo" / name
     return asset if asset.is_file() else None

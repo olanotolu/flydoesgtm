@@ -1,4 +1,6 @@
 """Small browser smoke test for the recorded, no-send showcase."""
+import time
+
 from playwright.sync_api import sync_playwright
 
 URL = "http://127.0.0.1:8090"
@@ -20,6 +22,15 @@ def main():
         assert page.locator("svg#clayfly").count() == 1, "clay fly artwork is not inlined"
         assert page.locator(".signal-card").count() == 5, "expected five signal source cards"
         assert page.locator(".exec-card").count() == 4, "expected four execution cards"
+        assert page.locator("#hero-account").text_content().strip() == "Feastables"
+        try:
+            page.wait_for_function("document.querySelector('#hero-account').textContent.trim() === 'Big Chicken'", timeout=45000)
+        except Exception:
+            end = time.monotonic() + 45
+            while page.locator("#hero-account").text_content().strip() != "Big Chicken":
+                if time.monotonic() > end:
+                    raise AssertionError("autoplay did not advance to Big Chicken")
+                page.wait_for_timeout(500)
         rows.nth(0).click()
         assert page.locator("#timeline").locator(".step").count() >= 3
         assert page.locator("#contact-state").text_content().strip() == "NO SEND PATH"
@@ -34,7 +45,6 @@ def main():
         assert page.locator("#firing-list .firing-row").count() >= 1
         assert page.locator("#vision-strip .vision-block").count() == 6
         assert page.locator(".check-row").count() == 4
-        page.wait_for_function("document.querySelector('#hero-account').textContent.trim() === 'Big Chicken'", timeout=45000)
         page.locator("#live-mode").click()
         assert page.locator("#live-mode").get_attribute("aria-pressed") == "true"
         assert not errors, errors

@@ -66,3 +66,7 @@ def test_resolve_static_asset_finds_demo_png():
     from serving.serve import resolve_static_asset
     found = resolve_static_asset("/clay-logo.png")
     assert found is not None and found.name == "clay-logo.png"
+    found_demo = resolve_static_asset("/demo/clay-logo.png")
+    assert found_demo is not None and found_demo.name == "clay-logo.png"
+    assert resolve_static_asset("/demo/../serve.py") is None
+    assert resolve_static_asset("/demo/sub/x.png") is None
