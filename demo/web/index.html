@@ -1229,7 +1229,8 @@ resize: resize
       const pack = SIGNAL_PACKS[row.company];
       const energies = effectiveSignals(row);
       const names = pack ? pack.tags : Object.entries(energies).filter(([, v]) => Number(v) > .6).map(([k]) => TAG_LABELS[k]);
-      const chips = names.length ? names : [TAG_LABELS[Object.entries(energies).sort((a, b) => b[1] - a[1])[0][0]]];
+      const sorted = Object.entries(energies).sort((a, b) => b[1] - a[1]);
+      const chips = names.length ? names : sorted.length ? [TAG_LABELS[sorted[0][0]] ?? sorted[0][0]] : ['No signals'];
       chips.forEach((label) => { const chip = document.createElement('i'); chip.textContent = label; root.append(chip); });
     }
     const state = { mode: 'replay', rows: [], selected: null, graph: null, points: [], frame: 0, activity: 0, signalEnergy: {}, channelPoints: {}, poolPoints: {}, actionGlow: 0 };
@@ -1303,7 +1304,8 @@ resize: resize
       state.selected = row; document.querySelectorAll('.row').forEach(node => { node.dataset.selected = node === button ? 'true' : 'false'; });
       renderTimeline(row); const draft = $('#draft'); draft.hidden = row.decision !== 'DRAFT_EMAIL'; if (row.draft) { $('#draft-title').textContent = `${row.company || 'Account'} / unsent sequence`; $('#draft-copy').textContent = row.draft.sequence?.[0]?.body || 'Draft content is available in the artifact.'; }
       $('#model-version').textContent = row.model_version || state.model_version || 'recorded proof'; $('#source-id').textContent = row.provenance?.[0]?.record_id || row.provenance?.[0]?.source || 'captured fixture'; $('#credit-use').textContent = `${row.credit_cost || 0} credits`; $('#event').textContent = `${row.company || 'Account'} → ${actionLabel(row.decision)}`; state.activity = Math.min(1, .25 + Number(row.confidence || 0) * .7);
-      state.signalEnergy = Object.fromEntries(SIGNAL_KEYS.map(key => [key, Math.max(.18, Number(effectiveSignals(row)[key] ?? .5))]));
+      const eff = effectiveSignals(row);
+      state.signalEnergy = Object.fromEntries(SIGNAL_KEYS.map(key => [key, Math.max(.18, Number(eff[key] ?? .5))]));
       state.actionGlow = row.decision === 'DRAFT_EMAIL' ? .95 : row.decision === 'ESCALATE' ? .85 : row.decision === 'IGNORE' ? .55 : .72;
       const lit = SIGNAL_KEYS.filter(key => state.signalEnergy[key] > .6);
       $('#brain-signal').replaceChildren(text('span', `${lit.length ? lit.join(' · ') : 'thin signals'} → `), text('strong', actionLabel(row.decision)));
@@ -1468,7 +1470,6 @@ resize: resize
     }
     window.addEventListener('resize', () => { resizeCanvas(); if (window.Clayfly3D && typeof window.Clayfly3D.resize === 'function') window.Clayfly3D.resize(); }); resizeCanvas(); loadGraph(); drawBrain();
     if (window.THREE && window.Clayfly3D && typeof window.Clayfly3D.init === 'function' && window.Clayfly3D.init(document.getElementById('fly3d'))) document.getElementById('fly-fallback').style.display = 'none';
-    function thinkColor(key, energy) { return energy; }
     function buildBrainPoints() {
       const canvas = document.querySelector('#brain3d');
       if (canvas._brain) return true;
@@ -1498,12 +1499,13 @@ resize: resize
       const order = Object.keys(state.channelPoints || {});
       const colors = brain.points.geometry.attributes.color;
       const lit = new THREE.Color(), dim = new THREE.Color('#c9bda6');
+      const BASE_Y = new THREE.Color('#f7c93c'), HOT = new THREE.Color('#3aa0e8');
       for (let i = 0; i < colors.count; i++) {
         let key = null;
         for (const name of order) { if (state.channelPoints[name] && state.channelPoints[name].has(i)) { key = name; break; } }
         const channelIndex = Math.max(0, order.indexOf(key));
         const energy = Number((energies[SIGNAL_KEYS[channelIndex % SIGNAL_KEYS.length]] ?? .5));
-        lit.set('#f7c93c').lerp(new THREE.Color('#3aa0e8'), 1 - energy);
+        lit.copy(BASE_Y).lerp(HOT, 1 - energy);
         colors.setXYZ(i, dim.r + (lit.r - dim.r) * energy, dim.g + (lit.g - dim.g) * energy, dim.b + (lit.b - dim.b) * energy);
       }
       colors.needsUpdate = true;
@@ -1572,7 +1574,12 @@ resize: resize
         renderThinkFromResponse(row, think);
       } catch (error) {
         renderThinkFromRow(row);
-        document.querySelector('#fly-decision-verdict').textContent = 'The fly says ' + actionLabel(row.decision) + ' — recorded signals, sim offline';
+        const g = window._thinkGen, note = ' — recorded signals, sim offline';
+        setTimeout(() => {
+          if (window._thinkGen !== g) return;
+          const verdict = document.querySelector('#fly-decision-verdict');
+          if (!verdict.textContent.includes('sim offline')) verdict.textContent += note;
+        }, 1060);
       } finally {
         button.disabled = false;
       }
