@@ -27,6 +27,15 @@ def main():
         assert page.locator("#think-readout .think-line").count() >= 3, "expected streamed reasoning lines"
         assert "The fly says YES" in page.locator("#fly-decision-verdict").text_content()
         assert page.locator("#fly-decision-motion li").count() == 3, "expected three motion steps"
+        na_sub = page.locator("#firing-sub").text_content()
+        assert "active" in na_sub and "spikes" in na_sub
+        assert page.locator("#firing-list .firing-row").count() >= 1
+        assert "Neuron activity" in page.locator("#activity-title").text_content()
+        assert "80 ms" in page.locator("#activity-window").text_content()
+        lit = page.locator("#vision-strip span.is-lit").count()
+        assert 0 <= lit <= 16
+        assert page.locator("#activity-window").text_content().strip() != ""
+        assert "Hz" in page.locator("#activity-legend").text_content()
         page.set_viewport_size({"width": 390, "height": 844})
         page.wait_for_timeout(400)
         scroll_width = page.evaluate("() => document.documentElement.scrollWidth")

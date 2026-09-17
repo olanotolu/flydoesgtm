@@ -378,6 +378,8 @@
     .firing-row strong { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; font-weight: 700; }
     .firing-row span { color: #9a9389; font-size: 9.5px; }
     .firing-row em { grid-row: 1 / 3; grid-column: 2; align-self: center; color: #5e5952; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; font-style: normal; }
+    .firing-main { display: grid; gap: 2px; }
+    .firing-main span { color: #8b857c; font-size: 11px; }
     .evidence-fly-stage { position: relative; display: grid; min-height: 470px; place-items: center; overflow: hidden; border-radius: 26px; background-color: rgba(255,253,249,.5); background-image: linear-gradient(rgba(117,106,90,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(117,106,90,.07) 1px, transparent 1px); background-size: 28px 28px; }
     .evidence-fly-stage::after { position: absolute; right: 12%; bottom: 7%; left: 12%; height: 30px; border-radius: 50%; background: radial-gradient(closest-side, rgba(61,49,32,.18), transparent); content: ""; }
     .evidence-fly { position: relative; z-index: 1; display: block; width: min(94%, 600px); filter: drop-shadow(0 22px 16px rgba(49,39,27,.12)); }
@@ -394,6 +396,13 @@
     .vision-strip span { height: 9px; border-radius: 2px; background: #e6e9e4; }
     .vision-strip span.is-lit { background: #91b659; box-shadow: 0 0 8px rgba(145,182,89,.36); }
     #brain-map { display: block; width: 100%; height: 230px; }
+    .activity-legend { display: flex; align-items: center; gap: 8px; margin: 2px 0 12px; color: #827b72; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; }
+    .activity-legend i { flex: 1; height: 6px; border-radius: 999px; background: linear-gradient(90deg, #eef1e8, #91b659); }
+    .activity-scrub-row { display: flex; align-items: center; gap: 10px; }
+    .activity-play { display: grid; width: 28px; height: 28px; flex: none; place-items: center; border: 1px solid rgba(108,98,82,.18); border-radius: 999px; background: #fbf8f1; color: #4d4842; font-size: 10px; cursor: pointer; box-shadow: 0 3px 0 #d8cfbe; }
+    .activity-play:active { transform: translateY(2px); box-shadow: none; }
+    .activity-scrub { flex: 1; accent-color: #91b659; }
+    .activity-step { margin: 8px 0 0; color: #8b857c; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; }
     .activity-meter { margin-top: 18px; }
     .meter-labels { display: flex; justify-content: space-between; color: #8e877e; font-size: 9px; }
     .meter-track { height: 4px; margin-top: 7px; overflow: hidden; border-radius: 999px; background: #e6e2da; }
@@ -494,8 +503,8 @@
       <p class="review-caption">Turn signals into pipeline</p>
       <section class="review-evidence" aria-label="Fly decision evidence">
         <aside class="evidence-panel">
-          <h3>Firing signals</h3>
-          <p class="evidence-sub"><span id="active-signal-count">6</span> recorded channels · Clay record <span id="spike-count">771663592</span></p>
+          <h3 id="firing-title">Firing signals</h3>
+          <p class="evidence-sub" id="firing-sub"><span id="active-signal-count">6</span> recorded channels · Clay record <span id="spike-count">771663592</span></p>
           <div class="firing-list" id="firing-list">
             <div class="firing-row"><strong>FUNDING</strong><span>recorded model input</span><em>0.97</em></div>
             <div class="firing-row"><strong>TRIGGER</strong><span>recorded model input</span><em>0.92</em></div>
@@ -510,10 +519,13 @@
           <img class="evidence-fly" src="../clay-fly-clean.png" alt="Fly decision model inspection">
         </div>
         <aside class="evidence-panel activity-panel">
-          <div class="activity-head"><h3>Recorded model evidence</h3><span class="activity-time" id="activity-time">92.00%</span></div>
-          <p class="evidence-sub">Encoded signal channels <span style="float:right" id="vision-count">6 / 6</span></p>
+          <div class="activity-head"><h3 id="activity-title">Recorded model evidence</h3><span class="activity-time" id="activity-window">80 ms</span></div>
+          <p class="evidence-sub">What the fly sees <span style="float:right" id="vision-count">6 / 6</span></p>
           <div class="vision-strip" id="vision-strip" aria-hidden="true"><span></span><span></span><span></span><span class="is-lit"></span><span></span><span></span><span class="is-lit"></span><span></span><span></span><span></span><span></span><span></span><span></span><span class="is-lit"></span><span></span><span></span><span></span><span></span><span class="is-lit"></span></div>
           <canvas id="brain-map" width="300" height="230" aria-label="Animated signal activity map"></canvas>
+          <div class="activity-legend" id="activity-legend"><span>0 Hz</span><i></i><span id="activity-hz">40 Hz</span></div>
+          <div class="activity-scrub-row"><button class="activity-play" id="activity-play" type="button" aria-label="Play neuron activity">▶</button><input class="activity-scrub" id="activity-scrub" type="range" min="0" max="3" value="0" step="1" aria-label="Scrub neuron activity"></div>
+          <p class="activity-step" id="activity-step">step 0 · 0 spikes</p>
           <div class="activity-meter"><div class="meter-labels"><span>0 confidence</span><span>1.0 confidence</span></div><div class="meter-track"><div class="meter-fill" id="meter-fill"></div></div></div>
           <div class="data-provenance"><span>Source <strong id="proof-source">clay_search</strong></span><span>Model <strong id="proof-model">fly-d02b5f73fb9903ff43dcaa384e3247ef574dbfa7-10000</strong></span><span>Mode <strong>recorded replay · no send</strong></span></div>
         </aside>
@@ -617,6 +629,46 @@
     const SIGNAL_PACK = { energies: { funding: .97, trigger: .92, intent: .88, hiring: .55, job_change: .18, negative: .04 } };
     const state = { graph: null, channelPoints: {} };
     function actionLabel(action) { return action === 'DRAFT_EMAIL' ? 'DRAFT EMAIL' : action || '—'; }
+    function drawBrainMap(hits) {
+      const canvas = document.querySelector('#brain-map');
+      if (!canvas) return;
+      const ratio = Math.min(2, window.devicePixelRatio || 1);
+      const width = canvas.clientWidth || 300, height = canvas.clientHeight || 230;
+      if (canvas.width !== width * ratio || canvas.height !== height * ratio) { canvas.width = width * ratio; canvas.height = height * ratio; }
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+      const cols = 21, rows = 14, padX = 12, padY = 12;
+      const stepX = (width - padX * 2) / (cols - 1), stepY = (height - padY * 2) / (rows - 1);
+      for (let i = 0; i < cols * rows; i++) {
+        const c = i % cols, r = Math.floor(i / cols);
+        const wobble = ((i * 37) % 13) / 13 - .5;
+        const x = padX + c * stepX + wobble * stepX * .6;
+        const y = padY + r * stepY + wobble * stepY * .6;
+        ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ddd6c9'; ctx.fill();
+      }
+      (hits || []).forEach((hit, i) => {
+        const power = Math.max(.25, Math.min(1, (hit.spikes || 1) / 3));
+        const x = padX + ((i * 5 + 3) % cols) * stepX, y = padY + ((i * 3 + 2) % rows) * stepY;
+        ctx.beginPath(); ctx.arc(x, y, 3 + power * 2.4, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(145,182,89,.28)'; ctx.fill();
+        ctx.beginPath(); ctx.arc(x, y, 2 + power * 1.6, 0, Math.PI * 2);
+        ctx.fillStyle = '#6f9a3e'; ctx.fill();
+      });
+    }
+    let activitySteps = [];
+    function paintActivityStep(index) {
+      const scrub = document.querySelector('#activity-scrub'), out = document.querySelector('#activity-step');
+      if (!scrub || !out) return;
+      scrub.value = String(index);
+      out.textContent = `step ${index} · ${activitySteps[index] || 0} spikes`;
+    }
+    function stopActivityPlay() {
+      if (window._activityTimer) { clearInterval(window._activityTimer); window._activityTimer = null; }
+      const button = document.querySelector('#activity-play');
+      if (button) button.textContent = '▶';
+    }
     async function buildBrainPoints() {
       const canvas = document.querySelector('#brain3d');
       if (!canvas) return false;
@@ -679,12 +731,45 @@
       brain.renderer.render(brain.scene, brain.camera);
     }
     function renderThinkFromResponse(think) {
+      window._thinkRendered = true;
       const bars = document.querySelector('#think-bars'); bars.replaceChildren();
       Object.entries(think.energies).forEach(([key, value]) => {
         const bar = document.createElement('div'); bar.className = 'think-bar'; bar.dataset.key = key;
         const fill = document.createElement('i'); bar.append(fill); bars.append(bar);
         requestAnimationFrame(() => { fill.style.width = `${Math.round(value * 100)}%`; });
       });
+      const na = think.neuron_activity || {};
+      const sees = think.sees || { lit: 0, total: 0, slots: [] };
+      const recorded = !!think.recorded;
+      const list = document.querySelector('#firing-list');
+      document.querySelector('#firing-title').textContent = recorded ? 'recorded signals' : 'Firing neurons';
+      document.querySelector('#firing-sub').innerHTML = recorded
+        ? `<strong>${na.active || 0}</strong> recorded channels · local replay`
+        : `<strong>${na.active || 0}</strong> active · <strong>${na.spikes || 0}</strong> spikes · ${na.window_ms || 80} ms · connectome ${na.steps || 4} steps`;
+      list.replaceChildren();
+      (na.top || []).forEach((n) => {
+        const row = document.createElement('div'); row.className = 'firing-row';
+        const left = document.createElement('div'); left.className = 'firing-main';
+        const name = document.createElement('strong'); name.textContent = `${n.label} #${n.id}`;
+        const where = document.createElement('span'); where.textContent = `${n.side} ${n.region}`.trim();
+        left.append(name, where);
+        const spk = document.createElement('em'); spk.textContent = `${n.spikes} spk`;
+        row.append(left, spk); list.append(row);
+      });
+      if (!(na.top || []).length) { const empty = document.createElement('div'); empty.className = 'firing-row'; empty.textContent = 'no spikes recorded'; list.append(empty); }
+      document.querySelector('#activity-title').textContent = recorded ? 'recorded signals' : 'Neuron activity';
+      document.querySelector('#activity-window').textContent = `${na.window_ms || 80} ms`;
+      const strip = document.querySelector('#vision-strip');
+      strip.replaceChildren();
+      const slots = sees.slots || [];
+      slots.forEach((on) => { const cell = document.createElement('span'); if (on) cell.className = 'is-lit'; strip.append(cell); });
+      strip.style.gridTemplateColumns = `repeat(${slots.length || 1}, 1fr)`;
+      document.querySelector('#vision-count').textContent = `${sees.lit || 0} / ${sees.total || slots.length}`;
+      document.querySelector('#activity-hz').textContent = `${na.hz_max || 0} Hz`;
+      drawBrainMap(na.top || []);
+      activitySteps = na.per_step || [];
+      stopActivityPlay();
+      paintActivityStep(0);
       const readout = document.querySelector('#think-readout'); readout.replaceChildren();
       const gen = (window._thinkGen = (window._thinkGen || 0) + 1);
       think.reasons.forEach((line, i) => {
@@ -712,6 +797,9 @@
     function renderThinkFromRow() {
       const energies = { ...SIGNAL_PACK.energies };
       const confidence = .92;
+      const keys = Object.keys(energies).sort((a, b) => energies[b] - energies[a]);
+      const top = keys.map((key, index) => ({ id: index + 1, label: key.toUpperCase(), side: '', region: 'recorded signal', spikes: Math.round(energies[key] * 100) }));
+      const spikes = top.reduce((sum, neuron) => sum + neuron.spikes, 0);
       renderThinkFromResponse({
         energies,
         recommendation: 'YES',
@@ -719,7 +807,10 @@
         confidence,
         crowdedness: Object.values(energies).filter((value) => Number(value) > .6).length,
         wait_days: 0,
-        reasons: Object.entries(energies).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([key, value]) => `Detected ${key} signal at ${Math.round(value * 100)}%`).concat([`Information value: ${confidence >= .75 ? 'HIGH' : confidence >= .5 ? 'MEDIUM' : 'LOW'}`])
+        reasons: Object.entries(energies).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([key, value]) => `Detected ${key} signal at ${Math.round(value * 100)}%`).concat([`Information value: ${confidence >= .75 ? 'HIGH' : confidence >= .5 ? 'MEDIUM' : 'LOW'}`]),
+        recorded: true,
+        neuron_activity: { active: keys.length, spikes, window_ms: 80, steps: 4, per_step: [0, Math.round(spikes * .42), Math.round(spikes * .28), Math.round(spikes * .3)], hz_max: 40, top },
+        sees: { lit: keys.filter((key) => energies[key] >= .5).length, total: keys.length, slots: keys.map((key) => energies[key] >= .5) }
       });
     }
     async function runThinking() {
@@ -752,6 +843,22 @@
       }
     }
     document.querySelector('#think-run').addEventListener('click', runThinking);
+    document.querySelector('#activity-scrub').addEventListener('input', (event) => {
+      stopActivityPlay();
+      paintActivityStep(Number(event.target.value));
+    });
+    document.querySelector('#activity-play').addEventListener('click', () => {
+      if (window._activityTimer) { stopActivityPlay(); return; }
+      if (!activitySteps.length) return;
+      let index = Number(document.querySelector('#activity-scrub').value);
+      if (index >= activitySteps.length - 1) index = 0;
+      document.querySelector('#activity-play').textContent = '❚❚';
+      window._activityTimer = setInterval(() => {
+        index += 1;
+        paintActivityStep(index);
+        if (index >= activitySteps.length - 1) stopActivityPlay();
+      }, 400);
+    });
   </script>
   <script>
     (() => {
@@ -759,22 +866,7 @@
       const start = document.getElementById('intro-start');
       if (!intro || !start) return;
       const SIGNAL = { channel: 'news', confidence: .92, recordId: '771663592', source: 'clay_search', model: 'fly-d02b5f73fb9903ff43dcaa384e3247ef574dbfa7-10000', signals: { funding: .97, trigger: .92, intent: .88, hiring: .55, job_change: .18, negative: .04 } };
-      const drawProofBrain = (signal) => {
-        const canvas = document.getElementById('brain-map');
-        if (!canvas || !signal) return;
-        const ratio = Math.min(2, window.devicePixelRatio || 1);
-        const width = canvas.clientWidth || 300, height = canvas.clientHeight || 230;
-        if (canvas.width !== width * ratio || canvas.height !== height * ratio) { canvas.width = width * ratio; canvas.height = height * ratio; }
-        const context = canvas.getContext('2d'); context.setTransform(ratio, 0, 0, ratio, 0, 0); context.clearRect(0, 0, width, height);
-        const entries = Object.entries(signal.signals);
-        entries.forEach(([key, value], index) => {
-          const y = 22 + index * 33;
-          context.fillStyle = '#777168'; context.font = '10px ui-monospace, monospace'; context.fillText(key.replace('_',' '), 4, y + 9);
-          context.fillStyle = '#e6e2da'; context.fillRect(88, y, Math.max(40, width - 126), 10);
-          context.fillStyle = key === 'negative' ? '#e58b86' : '#65a9d1'; context.fillRect(88, y, Math.max(40, width - 126) * Number(value), 10);
-          context.fillStyle = '#4d4842'; context.fillText(Number(value).toFixed(2), width - 32, y + 9);
-        });
-      };
+      const signalHits = () => Object.keys(SIGNAL.signals).map((key, index) => ({ id: index + 1, spikes: Math.round(SIGNAL.signals[key] * 3) }));
       const renderSignal = () => {
         const flow = document.getElementById('review-flow');
         const status = document.getElementById('review-status');
@@ -785,16 +877,18 @@
           flow.classList.remove('is-processing');
           status.textContent = 'pursue — 92 / 100';
           document.querySelectorAll('.action-card').forEach(node => node.classList.add('is-live'));
-          document.getElementById('activity-time').textContent = '92.00%';
           document.getElementById('meter-fill').style.width = '92%';
           document.getElementById('decision-chip').textContent = '✓ Qualified';
           document.getElementById('decision-copy').textContent = 'Anthropic was scored from recorded Clay record 771663592; no outreach was sent.';
           document.getElementById('proof-source').textContent = SIGNAL.source;
           document.getElementById('proof-model').textContent = SIGNAL.model;
-          drawProofBrain(SIGNAL);
           document.getElementById('evidence-verdict').textContent = 'qualified for action · 92.0%';
-          document.querySelectorAll('#vision-strip span').forEach((node, index) => node.classList.toggle('is-lit', index < 6));
-          document.getElementById('vision-count').textContent = '6 / 6';
+          if (!window._thinkRendered) {
+            document.getElementById('activity-window').textContent = '80 ms';
+            drawBrainMap(signalHits());
+            document.querySelectorAll('#vision-strip span').forEach((node, index) => node.classList.toggle('is-lit', index < 6));
+            document.getElementById('vision-count').textContent = '6 / 6';
+          }
         }, 1450);
       };
       const startReview = () => renderSignal();
