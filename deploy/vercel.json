@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [
-    { "source": "/((?!api/|demo/[^/]+\\.png).*)", "destination": "/demo/web/index.html" }
+  "redirects": [
+    { "source": "/", "destination": "/demo/web/", "statusCode": 302 }
   ]
 }
