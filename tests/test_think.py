@@ -57,16 +57,23 @@ def test_yes_when_engage_and_calm():
 
 
 def test_reasons_name_top_channels():
-    decide_out = {"channel_activity": {7: 2.5, 14: 5.1},
-                  "confidence": 0.92, "decision": "RESEARCH"}
+    decide_out = {"confidence": 0.92, "decision": "RESEARCH",
+                  "probabilities": {"RESEARCH": 0.5, "WAIT": 0.3,
+                                    "OBSERVE": 0.2},
+                  "neuron_activity": {"steps": 12, "dt_ms": 20,
+                                      "spikes": 23000, "hz_max": 50}}
     energies = {"funding": 0.9, "hiring": 0.55, "intent": 0.8,
                 "job_change": 0.5, "negative": 0.1, "trigger": 0.75}
     lines = build_reasons(energies, decide_out, 3, 0)
-    assert lines[0] == "Detected Funding signal at 90%"
-    assert lines[1] == "Detected Intent signal at 80%"
-    assert any("Deep channels responding: budget_level · day_frac" in line
+    assert lines[0].startswith("4 of 6 evidence channels moved")
+    assert "funding 0.90" in lines[0] and "intent 0.80" in lines[0]
+    assert any("12 × 20ms — 23,000 spikes, peak 50 Hz" in line
                for line in lines)
-    assert any("Information value: HIGH" in line for line in lines)
+    assert any("RESEARCH 50% · WAIT 30%" in line for line in lines)
+    assert any("RESEARCH pursues the account → YES" in line
+               for line in lines)
+    assert any("softmax rank, not a win probability" in line
+               for line in lines)
 
 
 def test_think_response_is_json_serializable():

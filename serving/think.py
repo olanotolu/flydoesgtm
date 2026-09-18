@@ -83,25 +83,54 @@ def _deep_channels(decide_out: dict) -> list[int]:
                                      reverse=True) if _ > 0][:4]
 
 
+VERDICT_WHY = {"YES": "pursues the account",
+               "WAIT": "holds the account without acting",
+               "NO": "writes the account off"}
+
+
 def build_reasons(energies: dict, decide_out: dict, crowdedness: int,
                   wait_days: int) -> list[str]:
-    top = _top_inputs(energies)[:2]
-    lines = [f"Detected {LABELS[key]} signal at {round(value * 100)}%"
-             for key, value in top]
-    deep = _deep_channels(decide_out)
-    if deep:
-        lines.append("Deep channels responding: " +
-                     " · ".join(CHANNEL_NAMES[key] for key in deep))
-    confidence = float(decide_out.get("confidence", 0.5))
-    value = ("HIGH" if confidence >= 0.75 else
-             "MEDIUM" if confidence >= 0.5 else "LOW")
-    lines.append(f"Information value: {value}")
-    if crowdedness >= 4:
-        lines.append(f"{crowdedness} coincident hot signals — "
-                     "attention contested")
-    lines.append(f"Recommended action: {decide_out.get('decision', '—')}")
-    if wait_days:
-        lines.append(f"Suggested wait: {wait_days} days")
+    """Narrate what actually happened, in the order it happened:
+
+    evidence values -> connectome activity -> readout scores -> verdict.
+    No internal jargon: channel names are the adapter's own words, spike
+    counts come from the recorded simulation, and the last two lines say
+    exactly how an action index becomes a YES/WAIT/NO and what the
+    confidence number does and does not mean.
+    """
+    moved = [(LABELS[key].lower(), value)
+             for key, value in _top_inputs(energies)
+             if abs(value - 0.5) > 0.1]
+    if moved:
+        lines = [f"{len(moved)} of {len(SIGNAL_ORDER)} evidence channels "
+                 "moved off neutral — " +
+                 " · ".join(f"{name} {value:.2f}" for name, value in moved)]
+        neutral = len(SIGNAL_ORDER) - len(moved)
+        if neutral:
+            lines.append(f"{neutral} stayed neutral — no verified evidence "
+                         "either way")
+    else:
+        lines = ["evidence flat — every channel reads neutral"]
+
+    na = decide_out.get("neuron_activity") or {}
+    steps = int(na.get("steps") or decide_out.get("sim_steps") or 0)
+    if steps and na.get("spikes") is not None:
+        lines.append(f"connectome ran {steps} × {na.get('dt_ms', 20):g}ms — "
+                     f"{int(na['spikes']):,} spikes, "
+                     f"peak {float(na.get('hz_max', 0)):g} Hz")
+
+    probs = sorted(((action, float(p)) for action, p in
+                    (decide_out.get("probabilities") or {}).items()),
+                   key=lambda item: item[1], reverse=True)
+    if probs:
+        lines.append("readout scored " + " · ".join(
+            f"{action} {round(p * 100)}%" for action, p in probs[:3]))
+
+    decision = str(decide_out.get("decision", "—"))
+    recommendation, _ = recommend(decision, crowdedness)
+    lines.append(f"{decision} {VERDICT_WHY[recommendation]} "
+                 f"→ {recommendation}")
+    lines.append("confidence is a softmax rank, not a win probability")
     return lines
 
 
