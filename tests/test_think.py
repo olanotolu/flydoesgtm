@@ -1,7 +1,7 @@
 import json
 
-from serving.think import (build_reasons, build_think_response,
-                           crowdedness_of, recommend)
+from serving.think import (baseline_note, build_reasons,
+                           build_think_response, crowdedness_of, recommend)
 
 
 def test_crowdedness_counts_hot_channels():
@@ -59,7 +59,7 @@ def test_yes_when_engage_and_calm():
 def test_reasons_name_top_channels():
     decide_out = {"confidence": 0.92, "decision": "RESEARCH",
                   "probabilities": {"RESEARCH": 0.5, "WAIT": 0.3,
-                                    "OBSERVE": 0.2},
+                                    "OBSERVE": 0.2, "IGNORE": 0.0},
                   "neuron_activity": {"steps": 12, "dt_ms": 20,
                                       "spikes": 23000, "hz_max": 50}}
     energies = {"funding": 0.9, "hiring": 0.55, "intent": 0.8,
@@ -69,11 +69,27 @@ def test_reasons_name_top_channels():
     assert "funding 0.90" in lines[0] and "intent 0.80" in lines[0]
     assert any("12 × 20ms — 23,000 spikes, peak 50 Hz" in line
                for line in lines)
-    assert any("RESEARCH 50% · WAIT 30%" in line for line in lines)
+    assert any("RESEARCH 50% · WAIT 30% · OBSERVE 20% · IGNORE 0%" in line
+               for line in lines)
     assert any("RESEARCH pursues the account → YES" in line
                for line in lines)
     assert any("softmax rank, not a win probability" in line
                for line in lines)
+
+
+def test_baseline_note_only_when_arms_diverge():
+    resp = {"recommendation": "WAIT", "reasons": ["a", "b"],
+            "baseline": {"policy_action": "EMAIL"},
+            "baseline_recommendation": "YES"}
+    baseline_note(resp)
+    assert any("no-brain baseline chose EMAIL → yes" in line
+               for line in resp["reasons"])
+    assert resp["reasons"][-1] == "b"  # inserted before the caveat
+    resp2 = {"recommendation": "YES", "reasons": ["a"],
+             "baseline": {"policy_action": "RESEARCH"},
+             "baseline_recommendation": "YES"}
+    baseline_note(resp2)
+    assert resp2["reasons"] == ["a"]
 
 
 def test_think_response_is_json_serializable():

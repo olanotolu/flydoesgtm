@@ -123,8 +123,15 @@ def build_reasons(energies: dict, decide_out: dict, crowdedness: int,
                     (decide_out.get("probabilities") or {}).items()),
                    key=lambda item: item[1], reverse=True)
     if probs:
+        shown = probs[:3]
+        # The write-off is the finding the demo owes honesty to: if it is
+        # outside the top three, show its score rather than hiding it.
+        if all(action != "IGNORE" for action, _ in shown):
+            ignore = dict(probs).get("IGNORE")
+            if ignore is not None:
+                shown.append(("IGNORE", ignore))
         lines.append("readout scored " + " · ".join(
-            f"{action} {round(p * 100)}%" for action, p in probs[:3]))
+            f"{action} {round(p * 100)}%" for action, p in shown))
 
     decision = str(decide_out.get("decision", "—"))
     recommendation, _ = recommend(decision, crowdedness)
@@ -132,6 +139,24 @@ def build_reasons(energies: dict, decide_out: dict, crowdedness: int,
                  f"→ {recommendation}")
     lines.append("confidence is a softmax rank, not a win probability")
     return lines
+
+
+def baseline_note(resp: dict) -> dict:
+    """Surface arm divergence inside the narration.
+
+    The no-brain baseline scores the same observation with the same
+    action space. When it disagrees with the fly's verdict, that
+    divergence is the whole point of the demo — the connectome is what
+    produced a different answer — so it belongs in the reasons, not only
+    in the footnote.
+    """
+    baseline = resp.get("baseline")
+    other = resp.get("baseline_recommendation")
+    if baseline and other and other != resp.get("recommendation"):
+        resp["reasons"].insert(
+            -1, f"no-brain baseline chose {baseline['policy_action']} → "
+                f"{other.lower()} — the connectome is the difference")
+    return resp
 
 
 def build_think_response(signals: dict, decide_out: dict) -> dict:

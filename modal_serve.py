@@ -88,8 +88,8 @@ def think_api():
 
     def _think(req: dict):
         """serving/serve.py's /api/demo/think handler, verbatim."""
-        from serving.think import (build_think_response, clamp_energies,
-                                   recommend)
+        from serving.think import (baseline_note, build_think_response,
+                                   clamp_energies, recommend)
         ctx = req.get("context") or {}
         if "evidence" in req:
             from serving.evidence import adapt_evidence_to_signals
@@ -117,6 +117,7 @@ def think_api():
             resp["baseline"] = baseline
             resp["baseline_recommendation"], _ = recommend(
                 baseline["policy_action"], 0)
+            baseline_note(resp)
         from serving.judge import judge_decision
         judge = judge_decision(signals, ctx, evidence=req.get("evidence"))
         if judge:

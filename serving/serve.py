@@ -595,7 +595,8 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("request body too large")
             req = json.loads(self.rfile.read(size) or b"{}")
             if path == "/api/demo/think":
-                from serving.think import (build_think_response,
+                from serving.think import (baseline_note,
+                                           build_think_response,
                                            clamp_energies, recommend)
                 ctx = req.get("context") or {}
                 if "evidence" in req:
@@ -625,6 +626,7 @@ class Handler(BaseHTTPRequestHandler):
                     resp["baseline"] = baseline
                     resp["baseline_recommendation"], _ = recommend(
                         baseline["policy_action"], 0)
+                    baseline_note(resp)
                 from serving.judge import judge_decision
                 judge = judge_decision(
                     signals, ctx, evidence=req.get("evidence"))
