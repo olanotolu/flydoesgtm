@@ -148,6 +148,14 @@ expensively — emailing dead accounts until unsubscribe/spam-burn
 deactivates them (~36 unsubs, ~17 spam/ep) rather than taking the clean
 +2.4 kill (`results/eval_tign_rows.json`).
 
+The counterfactual confirms the mechanism: `tign2` exempted teacher-IGNORE
+rows from the anchor (`--ignore-anchor-exempt`), removing the only dense
+gradient pushing the logit up — sampled ignores decayed to ~1/episode, eval
+collapsed to −659, and argmax still never landed (`results/eval_tign2_rows.json`).
+The remaining levers point the other way: keep the anchor on dead rows but
+oversample/weight them, raise `kill_bonus`, or decay the anchor only on
+non-IGNORE rows.
+
 The no-brain ablation (`experiments/no_brain_ablation.py`, same checkpoint,
 inference-time `feat=0` vs intact vs permuted) isolates the connectome's
 contribution: on long2 the aligned brain features are worth ~+2160 vs

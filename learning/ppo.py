@@ -1,6 +1,8 @@
 import torch
 from torch.distributions import Categorical
 
+from environment.clay_world import IGNORE
+
 LR = 0.01
 PPO_EPOCHS = 3
 MINIBATCH = 4096
@@ -28,6 +30,25 @@ GRAD_CLIP = 1.0
 IMITATION_COEF = 0.2
 
 
+def teacher_anchor(logits, teacher, ignore_anchor_exempt=False):
+    """Cross-entropy imitation toward teacher labels.
+
+    With `ignore_anchor_exempt`, rows whose teacher label is IGNORE are
+    masked out of the loss so PPO reward alone sets the IGNORE rate.
+    Empirical result (tign2, rent+kill_bonus v2 economy): argmax still
+    never landed on IGNORE, greedy eval scored 0 ignores, and sampled
+    IGNORE declined through stage 3 — the anchor was acting as the
+    *targeting* signal (which dead rows to kill), not the rate cap it
+    was blamed for; reward alone did not grow the rate either.
+    """
+    if ignore_anchor_exempt:
+        keep = teacher != IGNORE
+        if not bool(keep.any()):
+            return logits.sum() * 0.0
+        logits, teacher = logits[keep], teacher[keep]
+    return torch.nn.functional.cross_entropy(logits, teacher)
+
+
 def generalized_advantage(rewards, values, dones, gamma=0.99, lam=0.95):
     """GAE with an explicit reset at account/episode boundaries."""
     adv = torch.zeros_like(rewards)
@@ -42,7 +63,8 @@ def generalized_advantage(rewards, values, dones, gamma=0.99, lam=0.95):
     return adv, adv + values
 
 
-def ppo_update(policy, opt, traj, imitation_coef=IMITATION_COEF):
+def ppo_update(policy, opt, traj, imitation_coef=IMITATION_COEF,
+               ignore_anchor_exempt=False):
     feat, obs, act = traj["feat"], traj["obs"], traj["act"]
     logp_old, ret, val_old = traj["logp"], traj["ret"], traj["val"]
     action_mask = traj.get("action_mask")
@@ -72,8 +94,8 @@ def ppo_update(policy, opt, traj, imitation_coef=IMITATION_COEF):
             entropy = dist.entropy().mean()
             imitation = 0.0
             if "teacher" in traj:
-                imitation = torch.nn.functional.cross_entropy(
-                    logits, traj["teacher"][b])
+                imitation = teacher_anchor(logits, traj["teacher"][b],
+                                           ignore_anchor_exempt)
 
             loss = policy_loss + VALUE_COEF * value_loss \
                 - ENTROPY_COEF * entropy + imitation_coef * imitation

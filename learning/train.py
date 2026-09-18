@@ -52,7 +52,8 @@ CONSERVE = 0.03
 def run(curriculum, brain_device="cpu", torch_device=None,
         out_dir="results", train_mlp=False, seed0=10_000,
         val_every=5, verbose=True, use_raw_head=True, brain_data=None,
-        world_kwargs=None, ep_mult=1.0, imitation_final=None):
+        world_kwargs=None, ep_mult=1.0, imitation_final=None,
+        ignore_anchor_exempt=False):
     """Shared trainer for local runs and Modal remote calls.
 
     Returns (best_val, save_path). Writes checkpoints + metrics.json
@@ -71,6 +72,11 @@ def run(curriculum, brain_device="cpu", torch_device=None,
     write-off boundary instead of suppressing it; decaying it to 0.0
     leaves IGNORE purely to the v2 economy's kill_bonus. None keeps the
     historical constant coefficient.
+
+    `ignore_anchor_exempt` drops teacher-IGNORE rows from the anchor
+    entirely (see learning.ppo.teacher_anchor): the anchor pins each
+    label's *rate* near the teacher's ~1% IGNORE fire rate, so exempting
+    those rows lets PPO reward alone set the write-off rate.
     """
     import json
     from pathlib import Path
@@ -150,7 +156,8 @@ def run(curriculum, brain_device="cpu", torch_device=None,
                                stage["allowed"], device)
             imitation_coef = IMITATION_COEF + (imit_target - IMITATION_COEF) \
                 * (ep / max(total_eps - 1, 1))
-            ppo_update(policy, opt, traj, imitation_coef)
+            ppo_update(policy, opt, traj, imitation_coef,
+                       ignore_anchor_exempt)
             enc.adapt(traj["obs"].detach().cpu().numpy(),
                       traj["adv"].detach().cpu().numpy())
             ep += 1
@@ -232,7 +239,8 @@ def run(curriculum, brain_device="cpu", torch_device=None,
 def main():
     curriculum = FULL if "--full" in sys.argv else SMOKE
     run(curriculum, train_mlp="--mlp" in sys.argv,
-        use_raw_head="--no-raw-head" not in sys.argv)
+        use_raw_head="--no-raw-head" not in sys.argv,
+        ignore_anchor_exempt="--ignore-anchor-exempt" in sys.argv)
 
 
 if __name__ == "__main__":

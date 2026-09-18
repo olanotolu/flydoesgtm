@@ -61,6 +61,90 @@ def test_gae_bootstraps_and_resets_at_done():
     assert torch.allclose(ret, adv + values)
 
 
+def test_teacher_anchor_exempts_ignore_rows():
+    """Exempt teacher-IGNORE rows contribute exactly zero imitation loss
+    and zero imitation gradient; the rest of the batch stays anchored."""
+    from environment.clay_world import IGNORE
+    from learning.ppo import teacher_anchor
+    logits = torch.randn(4, 7, requires_grad=True)
+    teacher = torch.tensor([IGNORE, 4, IGNORE, 0])
+    loss = teacher_anchor(logits, teacher, ignore_anchor_exempt=True)
+    # identical to CE computed on only the non-IGNORE rows
+    assert torch.allclose(
+        loss, torch.nn.functional.cross_entropy(
+            logits.detach()[[1, 3]], teacher[[1, 3]]))
+    loss.backward()
+    assert logits.grad[0].eq(0).all()    # IGNORE rows: no imitation grad
+    assert logits.grad[2].eq(0).all()
+    assert logits.grad[1].ne(0).any()    # non-IGNORE rows still anchored
+    assert logits.grad[3].ne(0).any()
+
+
+def test_teacher_anchor_all_ignore_batch_is_zero_loss():
+    """A minibatch that is all teacher-IGNORE must not produce a NaN or
+    a nonzero imitation term — it contributes nothing at all."""
+    from environment.clay_world import IGNORE
+    from learning.ppo import teacher_anchor
+    logits = torch.randn(3, 7, requires_grad=True)
+    teacher = torch.full((3,), IGNORE)
+    loss = teacher_anchor(logits, teacher, ignore_anchor_exempt=True)
+    assert loss.item() == 0.0
+    loss.backward()                      # differentiable-safe, zero grads
+    assert logits.grad.eq(0).all()
+
+
+def test_teacher_anchor_default_anchors_every_row():
+    """Backward compat: without the flag every row is anchored,
+    including teacher-IGNORE rows (the historical behaviour)."""
+    from environment.clay_world import IGNORE
+    from learning.ppo import teacher_anchor
+    logits = torch.randn(4, 7)
+    teacher = torch.tensor([IGNORE, 4, IGNORE, 0])
+    assert torch.allclose(
+        teacher_anchor(logits, teacher),
+        torch.nn.functional.cross_entropy(logits, teacher))
+
+
+def _tiny_traj(n=8, teacher=None):
+    traj = {"feat": torch.randn(n, 8), "obs": torch.rand(n, 16),
+            "act": torch.randint(0, 7, (n,)), "logp": torch.zeros(n),
+            "ret": torch.randn(n), "val": torch.zeros(n)}
+    if teacher is not None:
+        traj["teacher"] = teacher
+    return traj
+
+
+def test_ppo_update_exempt_makes_all_ignore_teacher_a_noop():
+    """End to end through ppo_update: with the exempt flag on an
+    all-IGNORE teacher batch the imitation term vanishes, so even a huge
+    coefficient moves the policy exactly as a zero coefficient would."""
+    from environment.clay_world import IGNORE
+    from learning.ppo import ppo_update
+    torch.manual_seed(0)
+    traj = _tiny_traj(teacher=torch.full((8,), IGNORE))
+    p1, p2 = FlyPolicy(8), FlyPolicy(8)
+    p2.load_state_dict(p1.state_dict())
+    o1 = torch.optim.Adam(p1.parameters(), lr=0.01)
+    o2 = torch.optim.Adam(p2.parameters(), lr=0.01)
+    # n < MINIBATCH -> one full-batch minibatch per epoch, so randperm
+    # order cannot differ between the two updates.
+    ppo_update(p1, o1, traj, imitation_coef=0.0, ignore_anchor_exempt=True)
+    ppo_update(p2, o2, traj, imitation_coef=100.0,
+               ignore_anchor_exempt=True)
+    for a, b in zip(p1.parameters(), p2.parameters()):
+        assert torch.allclose(a, b)
+
+
+def test_ppo_update_runs_without_teacher_labels():
+    """Backward compat: a trajectory with no teacher labels still
+    updates (imitation term absent, exempt flag irrelevant)."""
+    from learning.ppo import ppo_update
+    policy = FlyPolicy(8)
+    opt = torch.optim.Adam(policy.parameters(), lr=0.01)
+    ppo_update(policy, opt, _tiny_traj(), ignore_anchor_exempt=True)
+    assert all(torch.isfinite(p).all() for p in policy.parameters())
+
+
 def test_sensor_interface_adapts_gains_from_advantage():
     from learning.encoder import Encoder
     enc = Encoder({0: np.array([0]), **{i: np.array([i]) for i in range(1, 16)}})

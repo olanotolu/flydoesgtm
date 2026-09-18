@@ -90,7 +90,8 @@ def train_remote(mlp: bool = False, seed0: int = 10_000, sim_steps: int = 12,
                  use_raw_head: bool = True, shuffled: bool = False,
                  rent: float = 0.0, kill_bonus: float = 0.0,
                  kill_penalty: float = 0.0, expire_all: bool = False,
-                 ep_mult: float = 1.0, imitation_final: float = 0.2):
+                 ep_mult: float = 1.0, imitation_final: float = 0.2,
+                 ignore_anchor_exempt: bool = False):
     import os
     os.environ["FLY_DATA"] = "/data/fly-data"   # persists across runs
     os.environ["FLY_SIM_STEPS"] = str(sim_steps)
@@ -118,12 +119,14 @@ def train_remote(mlp: bool = False, seed0: int = 10_000, sim_steps: int = 12,
                     out_dir=f"/data/results{suffix}", train_mlp=mlp,
                     seed0=seed0, use_raw_head=use_raw_head,
                     brain_data=brain_data, world_kwargs=world_kwargs,
-                    ep_mult=ep_mult, imitation_final=imitation_final)
+                    ep_mult=ep_mult, imitation_final=imitation_final,
+                    ignore_anchor_exempt=ignore_anchor_exempt)
     vol.commit()
     return {"best_val": val, "checkpoint": path, "sim_steps": sim_steps,
             "use_raw_head": use_raw_head, "shuffled": shuffled,
             "world_kwargs": world_kwargs,
             "imitation_final": imitation_final,
+            "ignore_anchor_exempt": ignore_anchor_exempt,
             "out_dir": f"/data/results{suffix}"}
 
 
@@ -132,7 +135,8 @@ def main(mlp: bool = False, probe_only: bool = False, sim_steps: int = 12,
          tag: str = "", no_raw_head: bool = False, shuffled: bool = False,
          rent: float = 0.0, kill_bonus: float = 0.0,
          kill_penalty: float = 0.0, expire_all: bool = False,
-         ep_mult: float = 1.0, imitation_final: float = 0.2):
+         ep_mult: float = 1.0, imitation_final: float = 0.2,
+         ignore_anchor_exempt: bool = False):
     if probe_only:
         print(probe.remote())
         return
@@ -150,11 +154,13 @@ def main(mlp: bool = False, probe_only: bool = False, sim_steps: int = 12,
           f"  use_raw_head: {not no_raw_head}  shuffled: {shuffled}"
           f"  world: rent={rent} kill_bonus={kill_bonus}"
           f" kill_penalty={kill_penalty} expire_all={expire_all}"
-          f" ep_mult={ep_mult}  imitation_final={imitation_final}")
+          f" ep_mult={ep_mult}  imitation_final={imitation_final}"
+          f"  ignore_anchor_exempt={ignore_anchor_exempt}")
     print(train_remote.remote(mlp=mlp, sim_steps=sim_steps, commit=commit,
                               tag=tag, use_raw_head=not no_raw_head,
                               shuffled=shuffled, rent=rent,
                               kill_bonus=kill_bonus,
                               kill_penalty=kill_penalty,
                               expire_all=expire_all, ep_mult=ep_mult,
-                              imitation_final=imitation_final))
+                              imitation_final=imitation_final,
+                              ignore_anchor_exempt=ignore_anchor_exempt))
