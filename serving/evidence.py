@@ -35,12 +35,19 @@ def adapt_evidence_to_signals(evidence: dict[str, Any]) -> dict[str, Any]:
     negative = _verified(evidence, "negative")
     layoffs = _verified(evidence, "layoffs")
     board = _verified(evidence, "board")
+    # Verified distress is evidence *against* the matching market channel,
+    # not just a flag on the negative one: a Chapter 11 filer cannot take a
+    # priced round, and a company in a mass layoff is not hiring.
+    chapter11 = negative and bool(
+        (evidence.get("negative") or {}).get("event") == "chapter_11")
 
     # Unknown account dimensions stay neutral. Each channel moves only on
     # verified evidence of its own kind — a launch is not funding proof.
     signals = {
-        "funding": round(min(1.0, 0.5 + 0.25 * funding), 4),
-        "hiring": round(min(1.0, 0.5 + 0.20 * hiring), 4),
+        "funding": round(min(1.0, 0.5 + 0.25 * funding
+                             - 0.20 * chapter11), 4),
+        "hiring": round(min(1.0, 0.5 + 0.20 * hiring
+                            - 0.20 * layoffs), 4),
         "intent": round(min(1.0, 0.5 + 0.12 * launch + 0.08 * enterprise
                             + 0.05 * pricing + 0.03 * linkedin + 0.02 * x_post), 4),
         "job_change": round(min(1.0, 0.5 + 0.15 * job_change), 4),
@@ -56,13 +63,17 @@ def adapt_evidence_to_signals(evidence: dict[str, Any]) -> dict[str, Any]:
 
     provenance = [
         {"channel": "funding", "value": signals["funding"],
-         "status": "derived" if funding else "unknown_neutral",
-         "rule": "verified funding round" if funding
-         else "no verified funding evidence"},
+         "status": "derived" if (funding or chapter11)
+         else "unknown_neutral",
+         "rule": ("chapter 11 — capital access impaired" if chapter11
+                  else "verified funding round" if funding
+                  else "no verified funding evidence")},
         {"channel": "hiring", "value": signals["hiring"],
-         "status": "derived" if hiring else "unknown_neutral",
-         "rule": "verified hiring signal" if hiring
-         else "no verified hiring evidence"},
+         "status": "derived" if (hiring or layoffs)
+         else "unknown_neutral",
+         "rule": ("mass layoff — workforce contracting" if layoffs
+                  else "verified hiring signal" if hiring
+                  else "no verified hiring evidence")},
         {"channel": "intent", "value": signals["intent"],
          "status": "derived", "rule": "launch + enterprise controls + pricing + LinkedIn + X",
          "inputs": {"launch": launch, "enterprise_controls": enterprise,

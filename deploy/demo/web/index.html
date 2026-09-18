@@ -1140,7 +1140,8 @@
           document.querySelector('#evidence-verdict').textContent =
             `${operatorChoice} · operator override · model said ${recommendation.toLowerCase()} ${confidence}%`;
         } else {
-          document.querySelector('#decision-chip').textContent = recommendation === 'YES' ? '✓ Qualified' : recommendation === 'WAIT' ? '◷ Wait' : '× No';
+          const actWord = String(think.decision || '').toLowerCase();
+          document.querySelector('#decision-chip').textContent = (recommendation === 'YES' ? '✓ Qualified · ' : recommendation === 'WAIT' ? '◷ Wait · ' : '× No · ') + actWord;
           document.querySelector('#evidence-verdict').textContent = `${recommendation.toLowerCase()} · ${String(think.decision || '').toLowerCase()} · ${confidence}%`;
           status.textContent = `${recommendation.toLowerCase()} — ${String(think.decision || '').toLowerCase()} · ${confidence}%`;
         }

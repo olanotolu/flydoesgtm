@@ -57,3 +57,22 @@ def test_distress_without_negative_still_derives():
     out = adapt_evidence_to_signals({"layoffs": {"verified": True},
                                      "board": {"verified": True}})
     assert out["signals"]["negative"] == 0.7
+
+
+def test_chapter11_drags_funding_and_layoffs_drags_hiring():
+    out = adapt_evidence_to_signals(
+        {"negative": {"verified": True, "event": "chapter_11"},
+         "layoffs": {"verified": True}})
+    sig = out["signals"]
+    assert sig["funding"] == 0.3 and sig["hiring"] == 0.3
+    assert sig["negative"] == 0.82
+    rules = {p["channel"]: p["rule"] for p in out["provenance"]}
+    assert "capital access impaired" in rules["funding"]
+    assert "workforce contracting" in rules["hiring"]
+
+
+def test_non_bankruptcy_negative_leaves_market_channels_neutral():
+    out = adapt_evidence_to_signals({"negative": {"verified": True,
+                                                "event": "lawsuit"}})
+    assert out["signals"]["funding"] == 0.5
+    assert out["signals"]["hiring"] == 0.5
