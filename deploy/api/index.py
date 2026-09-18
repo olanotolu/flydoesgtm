@@ -15,6 +15,7 @@ from urllib.parse import urlsplit
 ROOT = Path(__file__).parents[1]
 DEMO = (ROOT / "demo").resolve()
 REPLAY = json.loads((ROOT / "demo" / "replay.json").read_text())
+THINK_REPLAY = json.loads((ROOT / "demo" / "think_replay_anthropic.json").read_text())
 DEFAULT_QUERY = ('select from people where location_country = "United States" '
                  'and experiences.any(is_current = true and '
                  'job_title is_similar_to ("Owner", "Founder", "Chief Operating Officer", '
@@ -107,6 +108,10 @@ def payload_for(path, method, body=b""):
         if summary.is_file():
             return 200, json.loads(summary.read_text())
         return 404, {"error": "route not found"}
+    if method == "POST" and path == "/api/demo/think":
+        # The public deployment intentionally replays the reviewed, sourced
+        # brain run. The local service remains the live connectome path.
+        return 200, {**THINK_REPLAY, "recorded": True, "mode": "recorded_replay"}
     if method == "POST" and path == "/api/demo/run":
         try:
             request = json.loads(body or b"{}")

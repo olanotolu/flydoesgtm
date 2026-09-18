@@ -1084,13 +1084,16 @@
         const scoreChip = document.querySelector('#model-score');
         scoreChip.textContent = `${confidence}/100`;
         scoreChip.classList.add('is-scored');
-        document.querySelector('#decision-copy').textContent = `${think.connectome} returned ${think.decision} at ${confidence}% confidence using ${think.model_version}. Nothing was sent.`;
-        document.querySelector('#proof-source').textContent = 'Anthropic + LinkedIn + @claudeai X';
+        const runMode = think.recorded ? 'recorded MaleCNS replay' : 'live MaleCNS connectome run';
+        document.querySelector('#decision-copy').textContent = `${think.connectome} returned ${think.decision} at ${confidence}% confidence using ${think.model_version} (${runMode}). Nothing was sent.`;
+        document.querySelector('#proof-source').textContent = think.recorded
+          ? 'Recorded Anthropic + LinkedIn + X evidence'
+          : 'Anthropic + LinkedIn + @claudeai X';
         const modelId = think.model_version || 'unknown';
         const proofModel = document.querySelector('#proof-model');
         proofModel.textContent = modelId.length > 24 ? `${modelId.slice(0, 14)}…${modelId.slice(-6)}` : modelId;
         proofModel.title = modelId;
-        document.querySelector('.model-chip').textContent = 'fly · live run';
+        document.querySelector('.model-chip').textContent = think.recorded ? 'fly · recorded run' : 'fly · live run';
         if (!operatorChoice) {
           document.querySelector('#decision-chip').textContent = recommendation === 'YES' ? '✓ Qualified' : recommendation === 'WAIT' ? '◷ Wait' : '× No';
           document.querySelector('#evidence-verdict').textContent = `${recommendation.toLowerCase()} · ${String(think.decision || '').toLowerCase()} · ${confidence}%`;
