@@ -319,6 +319,31 @@
     @keyframes clay-button-breathe { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-3px) rotate(-.35deg); } }
     @media (max-height: 760px) { .intro-inner { height: calc(100dvh - 24px); gap: 12px; } .intro-visual { width: min(50vh, 440px, 80vw); } .intro-actions { gap: 8px; } .intro-start { padding-block: 15px; } }
     @media (max-width: 600px) { .intro-screen { padding: 16px 12px 14px; } .intro-inner { height: calc(100dvh - 30px); gap: 14px; } .intro-brand { font-size: clamp(42px, 13vw, 56px); gap: 10px; } .intro-brand .mark { width: 60px; height: 16px; } .intro-visual { width: min(46vh, 92vw); } .intro-start { min-width: 230px; } }
+    @media (max-width: 600px) {
+      .intro-inner { justify-content: space-evenly; }
+      .intro-heading { gap: 9px; }
+      .intro-brand { font-size: clamp(48px, 17vw, 68px); gap: 1px; }
+      .intro-brand .title-line:first-child { font-size: .43em; }
+      .intro-brand .title-line:nth-child(2) { padding-bottom: 7px; }
+      .intro-brand .title-line:nth-child(2)::after { height: 5px; }
+      .intro-byline img { width: 62px; }
+      .intro-visual { width: min(43vh, 88vw); }
+      .intro-start { width: min(100%, 310px); min-width: 0; min-height: 56px; padding: 16px 52px 16px 24px; font-size: 17px; }
+      .intro-hint { font-size: 11px; }
+      .review-shell { padding-inline: 14px; }
+      .review-header { padding-top: 2px; }
+      .review-question { max-width: 330px; margin-inline: auto; font-size: clamp(28px, 9vw, 40px); line-height: .98; }
+      .review-left, .review-right { width: 100%; }
+      .source-card { min-height: 64px; padding: 11px 13px; }
+      .source-copy small { max-width: 220px; }
+      .review-fly-wrap { width: min(100%, 390px); }
+      .reasoning-card { padding: 14px; }
+      .reasoning-body { grid-template-columns: 1fr; }
+      .score-chip { justify-self: start; }
+      .evidence-panel, .activity-panel { min-height: 0; padding: 18px; }
+      .evidence-fly-stage { min-height: 330px; }
+      .decision-proof { padding-inline: 4px; }
+    }
 
     /* Flat GTM review demo — intentionally separate from the legacy 3D workspace. */
     .top, body > footer { display: none !important; }

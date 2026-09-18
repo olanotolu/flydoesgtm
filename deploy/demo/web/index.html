@@ -319,6 +319,31 @@
     @keyframes clay-button-breathe { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-3px) rotate(-.35deg); } }
     @media (max-height: 760px) { .intro-inner { height: calc(100dvh - 24px); gap: 12px; } .intro-visual { width: min(50vh, 440px, 80vw); } .intro-actions { gap: 8px; } .intro-start { padding-block: 15px; } }
     @media (max-width: 600px) { .intro-screen { padding: 16px 12px 14px; } .intro-inner { height: calc(100dvh - 30px); gap: 14px; } .intro-brand { font-size: clamp(42px, 13vw, 56px); gap: 10px; } .intro-brand .mark { width: 60px; height: 16px; } .intro-visual { width: min(46vh, 92vw); } .intro-start { min-width: 230px; } }
+    @media (max-width: 600px) {
+      .intro-inner { justify-content: space-evenly; }
+      .intro-heading { gap: 9px; }
+      .intro-brand { font-size: clamp(48px, 17vw, 68px); gap: 1px; }
+      .intro-brand .title-line:first-child { font-size: .43em; }
+      .intro-brand .title-line:nth-child(2) { padding-bottom: 7px; }
+      .intro-brand .title-line:nth-child(2)::after { height: 5px; }
+      .intro-byline img { width: 62px; }
+      .intro-visual { width: min(43vh, 88vw); }
+      .intro-start { width: min(100%, 310px); min-width: 0; min-height: 56px; padding: 16px 52px 16px 24px; font-size: 17px; }
+      .intro-hint { font-size: 11px; }
+      .review-shell { padding-inline: 14px; }
+      .review-header { padding-top: 2px; }
+      .review-question { max-width: 330px; margin-inline: auto; font-size: clamp(28px, 9vw, 40px); line-height: .98; }
+      .review-left, .review-right { width: 100%; }
+      .source-card { min-height: 64px; padding: 11px 13px; }
+      .source-copy small { max-width: 220px; }
+      .review-fly-wrap { width: min(100%, 390px); }
+      .reasoning-card { padding: 14px; }
+      .reasoning-body { grid-template-columns: 1fr; }
+      .score-chip { justify-self: start; }
+      .evidence-panel, .activity-panel { min-height: 0; padding: 18px; }
+      .evidence-fly-stage { min-height: 330px; }
+      .decision-proof { padding-inline: 4px; }
+    }
 
     /* Flat GTM review demo — intentionally separate from the legacy 3D workspace. */
     .top, body > footer { display: none !important; }
@@ -492,7 +517,7 @@
     <div class="review-shell">
       <header class="review-header">
         <img class="review-logo" src="../clay-logo.png" alt="Clay">
-        <span class="autopilot"><span class="autopilot-dot" aria-hidden="true"></span>Recorded replay · no auto-send</span>
+        <span class="autopilot"><span class="autopilot-dot" aria-hidden="true"></span>Manual review · no auto-send</span>
       </header>
       <h1 class="review-question" id="review-question">should we go to market?</h1>
       <div class="review-flow" id="review-flow">
@@ -531,7 +556,7 @@
           <div class="review-status" id="review-status" aria-live="polite">ready to run</div>
           <button id="think-run" type="button">RUN the fly</button>
           <div class="reasoning-card">
-            <div class="reasoning-head"><span class="reasoning-mark" aria-hidden="true">✦</span><strong>Reasoning</strong><span class="model-chip">fly · recorded</span></div>
+            <div class="reasoning-head"><span class="reasoning-mark" aria-hidden="true">✦</span><strong>Reasoning</strong><span class="model-chip">fly · local model</span></div>
             <div class="reasoning-body">
               <p>Evidence queued for the real model:</p>
               <ul><li>Verified launch, pricing, and enterprise controls</li><li>Official LinkedIn and @claudeai X launch posts</li><li>Sample Clay seller context is excluded from target score</li></ul>
@@ -574,16 +599,16 @@
         </aside>
         <aside class="evidence-panel activity-panel">
           <div class="activity-head"><h3 id="activity-title">MaleCNS v1.0 anatomy</h3><span class="activity-time" id="activity-window">—</span></div>
-          <p class="evidence-sub">24,000 real soma coordinates · recorded run, not live <span style="float:right" id="vision-count">— / —</span></p>
+          <p class="evidence-sub">24,000 real soma coordinates · engineered GTM stimulation <span style="float:right" id="vision-count">— / —</span></p>
           <div class="vision-strip" id="vision-strip" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
           <canvas id="brain-map" width="300" height="230" aria-label="Animated signal activity map"></canvas>
           <div class="activity-legend" id="activity-legend"><span>0 Hz</span><i></i><span id="activity-hz">0 Hz</span></div>
           <div class="activity-scrub-row"><button class="activity-play" id="activity-play" type="button" aria-label="Play neuron activity">▶</button><input class="activity-scrub" id="activity-scrub" type="range" min="0" max="0" value="0" step="1" aria-label="Scrub neuron activity"></div>
-          <p class="activity-step" id="activity-step">awaiting replay</p>
+          <p class="activity-step" id="activity-step">awaiting run</p>
           <div class="activity-meter"><div class="meter-labels"><span>0 confidence</span><span>1.0 confidence</span></div><div class="meter-track"><div class="meter-fill" id="meter-fill"></div></div></div>
-          <div class="data-provenance"><span>Anatomy <strong>MaleCNS v1.0 · 24,000 / 166,700 somata</strong></span><span>Source <strong id="proof-source">Janelia / Google · CC-BY 4.0</strong></span><span>Overlay <strong>engineered GTM stimulation · not biological recording</strong></span><span>Model <strong id="proof-model">fly-demo-evidence-v1</strong></span><span>Mode <strong>recorded replay · no send</strong></span></div>
+          <div class="data-provenance"><span>Anatomy <strong>MaleCNS v1.0 · 24,000 / 166,700 somata</strong></span><span>Source <strong id="proof-source">Janelia / Google · CC-BY 4.0</strong></span><span>Overlay <strong>engineered GTM stimulation · not biological recording</strong></span><span>Model <strong id="proof-model">fly-demo-evidence-v1</strong></span><span>Mode <strong>sourced demo · no send</strong></span></div>
         </aside>
-        <div class="decision-proof"><span class="evidence-verdict" id="evidence-verdict">awaiting replay</span><span class="decision-chip" id="decision-chip">Ready to run</span><span id="decision-copy">External facts are sourced; the score and draft are recorded replay, demo-derived. Nothing is sent.</span></div>
+        <div class="decision-proof"><span class="evidence-verdict" id="evidence-verdict">awaiting run</span><span class="decision-chip" id="decision-chip">Ready to run</span><span id="decision-copy">External facts are sourced; the GTM score and draft are demo-derived. Nothing is sent.</span></div>
         <div class="eval-strip" id="eval-strip" hidden></div>
       </section>
     </div>
@@ -1017,15 +1042,6 @@
         document.querySelector('#fly-decision').hidden = false;
       }, 120 * think.reasons.length);
     }
-    async function renderThinkFromRow() {
-      const response = await fetch(`../think_replay_${activePack}.json`);
-      if (!response.ok) return null;
-      const think = await response.json();
-      think.recorded = true;
-      renderThinkFromResponse(think);
-      playActivityReplay();
-      return think;
-    }
     async function runThinking() {
       const button = document.querySelector('#think-run');
       const status = document.querySelector('#review-status');
@@ -1088,28 +1104,23 @@
         const finalYes = operatorChoice ? operatorChoice === 'yes' : recommendation === 'YES';
         document.querySelector('.launch-btn').disabled = !finalYes;
       } catch (error) {
-        renderThinkFromRow().then((think) => {
-          if (!think) return;
-          const recommendation = think.recommendation || 'NO';
-          const confidence = Math.round(Number(think.confidence || 0) * 100);
-          if (!operatorChoice && recommendation === 'YES') yesKey.classList.add('is-pressed');
-          if (!operatorChoice && recommendation === 'NO') noKey.classList.add('is-pressed');
-          document.querySelector('#meter-fill').style.width = `${confidence}%`;
-          const replayScore = document.querySelector('#model-score');
-          replayScore.textContent = `${confidence}/100`;
-          replayScore.classList.add('is-scored');
-          if (!operatorChoice) {
-            document.querySelector('#decision-chip').textContent = recommendation === 'YES' ? '✓ Qualified · recorded' : recommendation === 'WAIT' ? '◷ Wait · recorded' : '× No · recorded';
-            document.querySelector('#evidence-verdict').textContent = `${recommendation.toLowerCase()} · ${String(think.decision || '').toLowerCase()} · ${confidence}% · recorded`;
-            status.textContent = `${recommendation.toLowerCase()} — ${String(think.decision || '').toLowerCase()} · ${confidence} / 100 · recorded`;
-          }
-          document.querySelector('#decision-copy').textContent = 'Live model not available on this build — showing the recorded replay result. Nothing was sent.';
-          document.querySelectorAll('.action-card').forEach(node => node.classList.toggle('is-live', recommendation === 'YES'));
-          const ready = document.querySelector('.plan-ready');
-          ready.querySelector('.plan-check').textContent = recommendation === 'YES' ? '✓' : recommendation === 'WAIT' ? '◷' : '×';
-          ready.querySelector('strong').textContent = recommendation === 'YES' ? 'Recorded replay recommends action' : recommendation === 'WAIT' ? 'Recorded replay recommends waiting' : 'Recorded replay says do not pursue';
-          ready.querySelector('small').textContent = `replay · ${confidence}% confidence`;
-        });
+        stopActivityPlay();
+        status.textContent = 'real brain service unavailable';
+        document.querySelector('#decision-chip').textContent = 'Run unavailable';
+        document.querySelector('#decision-copy').textContent = 'Start the local service at http://127.0.0.1:8090. No simulated decision was substituted.';
+        document.querySelector('#evidence-verdict').textContent = 'no result · backend required';
+        document.querySelector('#fly-decision').hidden = false;
+        document.querySelector('#fly-decision-verdict').textContent = error.message;
+        document.querySelector('#fly-decision-confidence').textContent = 'No confidence score produced';
+        document.querySelector('#fly-decision-motion').replaceChildren();
+        document.querySelector('.launch-btn').disabled = true;
+        document.querySelector('.model-chip').textContent = 'fly · unavailable';
+        document.querySelectorAll('.action-card').forEach(node => node.classList.remove('is-live'));
+        const failed = document.querySelector('.plan-ready');
+        failed.querySelector('.plan-check').textContent = '·';
+        failed.querySelector('strong').textContent = 'Awaiting fly decision';
+        failed.querySelector('small').textContent = 'Run the real model before any action.';
+        document.querySelector('.review-center').classList.remove('running');
       } finally {
         button.disabled = false;
         wrap.classList.remove('thinking');
