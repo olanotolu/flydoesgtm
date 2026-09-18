@@ -2,7 +2,10 @@
   "mode": "recorded_clay_capture",
   "safe_to_contact": false,
   "query": "US restaurant and food-service operators from Clay Search",
-  "model_version": "fly-d02b5f73fb9903ff43dcaa384e3247ef574dbfa7-10000",
+  "model_version": "fly-11c5806a7217e79b864f53de0b0e86b1bae17c57-dirty-10000",
+  "recorded_model_version": "fly-d02b5f73fb9903ff43dcaa384e3247ef574dbfa7-10000",
+  "legacy_dataset": true,
+  "note": "recorded Clay capture from an earlier checkpoint generation; retained for the /api/demo/replay compatibility route",
   "rows": [
     {
       "company": "Feastables",

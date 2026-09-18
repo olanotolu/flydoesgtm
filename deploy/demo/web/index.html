@@ -434,6 +434,7 @@
     .launch-btn:hover { background: #2c2721; transform: translateY(-1px); }
     .launch-btn:active { transform: translateY(1px); }
     .launch-btn:disabled { cursor: not-allowed; opacity: .42; transform: none; }
+    .launch-btn.is-flash { background: #3d764b; }
     .action-card { min-height: 62px; padding: 8px; border: 0; background: transparent; box-shadow: none; opacity: .5; transition: opacity .25s ease; }
     .action-card.is-live { opacity: 1; }
     .action-card.is-live .action-arrow { color: #24221f; }
@@ -473,7 +474,9 @@
     .activity-scrub-row { display: flex; align-items: center; gap: 10px; }
     .activity-play { display: grid; width: 28px; height: 28px; flex: none; place-items: center; border: 1px solid rgba(108,98,82,.18); border-radius: 999px; background: #fbf8f1; color: #4d4842; font-size: 10px; cursor: pointer; box-shadow: 0 3px 0 #d8cfbe; }
     .activity-play:active { transform: translateY(2px); box-shadow: none; }
+    .activity-play.is-disabled { opacity: .4; cursor: default; box-shadow: none; }
     .activity-scrub { flex: 1; accent-color: #91b659; }
+    .activity-scrub:disabled { opacity: .4; }
     .activity-step { margin: 8px 0 0; color: #8b857c; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; }
     .activity-meter { margin-top: 18px; }
     .meter-labels { display: flex; justify-content: space-between; color: #8e877e; font-size: 9px; }
@@ -556,7 +559,7 @@
           <div class="review-status" id="review-status" aria-live="polite">ready to run</div>
           <button id="think-run" type="button">RUN the fly</button>
           <div class="reasoning-card">
-            <div class="reasoning-head"><span class="reasoning-mark" aria-hidden="true">✦</span><strong>Reasoning</strong><span class="model-chip">fly · local model</span></div>
+            <div class="reasoning-head"><span class="reasoning-mark" aria-hidden="true">✦</span><strong>Reasoning</strong><span class="model-chip">fly · recorded replay</span></div>
             <div class="reasoning-body">
               <p>Evidence queued for the real model:</p>
               <ul><li>Verified launch, pricing, and enterprise controls</li><li>Official LinkedIn and @claudeai X launch posts</li><li>Sample Clay seller context is excluded from target score</li></ul>
@@ -589,12 +592,7 @@
           <h3 id="firing-title">Firing signals</h3>
           <p class="evidence-sub" id="firing-sub"><span id="active-signal-count">6</span> evidence channels · episode <span id="spike-count">FABLE-5.1</span></p>
           <div class="firing-list" id="firing-list">
-            <div class="firing-row"><strong>OFFICIAL_LAUNCH</strong><span>Anthropic newsroom · verified</span><em>1.00</em></div>
-            <div class="firing-row"><strong>LINKEDIN_POST</strong><span>Anthropic company page · verified</span><em>1.00</em></div>
-            <div class="firing-row"><strong>ENTERPRISE_CONTROLS</strong><span>launch detail · verified</span><em>0.94</em></div>
-            <div class="firing-row"><strong>PRICING_CHANGE</strong><span>launch detail · verified</span><em>0.86</em></div>
-            <div class="firing-row"><strong>CEO_VERIFIED</strong><span>Anthropic newsroom · verified</span><em>1.00</em></div>
-            <div class="firing-row"><strong>X_LAUNCH_POST</strong><span>@claudeai · verified</span><em>1.00</em></div>
+            <div class="firing-row"><span>neuron activity appears after a run</span></div>
           </div>
         </aside>
         <aside class="evidence-panel activity-panel">
@@ -603,7 +601,7 @@
           <div class="vision-strip" id="vision-strip" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
           <canvas id="brain-map" width="300" height="230" aria-label="Animated signal activity map"></canvas>
           <div class="activity-legend" id="activity-legend"><span>0 Hz</span><i></i><span id="activity-hz">0 Hz</span></div>
-          <div class="activity-scrub-row"><button class="activity-play" id="activity-play" type="button" aria-label="Play neuron activity">▶</button><input class="activity-scrub" id="activity-scrub" type="range" min="0" max="0" value="0" step="1" aria-label="Scrub neuron activity"></div>
+          <div class="activity-scrub-row"><button class="activity-play is-disabled" id="activity-play" type="button" aria-label="Play neuron activity" aria-disabled="true">▶</button><input class="activity-scrub" id="activity-scrub" type="range" min="0" max="0" value="0" step="1" aria-label="Scrub neuron activity" disabled></div>
           <p class="activity-step" id="activity-step">awaiting run</p>
           <div class="activity-meter"><div class="meter-labels"><span>0 confidence</span><span>1.0 confidence</span></div><div class="meter-track"><div class="meter-fill" id="meter-fill"></div></div></div>
           <div class="data-provenance"><span>Anatomy <strong>MaleCNS v1.0 · 24,000 / 166,700 somata</strong></span><span>Source <strong id="proof-source">Janelia / Google · CC-BY 4.0</strong></span><span>Overlay <strong>engineered GTM stimulation · not biological recording</strong></span><span>Model <strong id="proof-model">fly-demo-evidence-v1</strong></span><span>Mode <strong>sourced demo · no send</strong></span></div>
@@ -775,6 +773,21 @@
     };
     let activePack = 'anthropic';
     const EVIDENCE_PACK = () => PACKS[activePack].evidence;
+    const SOURCE_HOSTS = { 'anthropic.com': 'Anthropic', 'linkedin.com': 'LinkedIn', 'x.com': 'X',
+      'reuters.com': 'Reuters', 'sec.gov': 'SEC', 'techcrunch.com': 'TechCrunch',
+      'linear.app': 'Linear', 'clay.com': 'Clay' };
+    function sourceNames(items) {
+      const names = [];
+      (items || []).forEach((s) => {
+        let name = s.source || '';
+        try {
+          const host = new URL(s.url || '').hostname.replace(/^www\./, '');
+          if (host) name = SOURCE_HOSTS[host] || host;
+        } catch (e) { /* keep the declared source name */ }
+        if (name && !names.includes(name)) names.push(name);
+      });
+      return names;
+    }
     function renderPack(key) {
       if (!PACKS[key] || key === activePack) return;
       activePack = key;
@@ -819,7 +832,19 @@
       document.getElementById('fly-decision-motion').replaceChildren();
       document.getElementById('think-bars').replaceChildren();
       document.getElementById('think-readout').replaceChildren();
-      document.getElementById('firing-list').replaceChildren();
+      document.getElementById('firing-title').textContent = 'Firing signals';
+      document.getElementById('firing-list').innerHTML =
+        '<div class="firing-row"><span>neuron activity appears after a run</span></div>';
+      document.getElementById('activity-title').textContent = 'MaleCNS v1.0 anatomy';
+      document.getElementById('activity-window').textContent = '—';
+      document.getElementById('activity-hz').textContent = '0 Hz';
+      document.getElementById('proof-source').textContent = sourceNames(pack.sources).join(' + ');
+      const proofModel = document.getElementById('proof-model');
+      proofModel.textContent = 'fly-demo-evidence-v1';
+      proofModel.removeAttribute('title');
+      document.querySelector('.model-chip').textContent = 'fly · recorded replay';
+      document.getElementById('decision-copy').textContent =
+        'External facts are sourced; the GTM score and draft are demo-derived. Nothing is sent.';
       document.getElementById('review-status').textContent = 'ready to run';
       document.getElementById('decision-chip').textContent = 'Ready to run';
       document.getElementById('evidence-verdict').textContent = 'awaiting run';
@@ -829,6 +854,7 @@
       document.getElementById('vision-count').textContent = '— / —';
       document.getElementById('review-yes').classList.remove('is-pressed');
       document.getElementById('review-no').classList.remove('is-pressed');
+      lastVerdict = null;
       document.querySelector('.launch-btn').disabled = true;
       document.querySelectorAll('.action-card').forEach((n) => n.classList.remove('is-live'));
       const ready = document.querySelector('.plan-ready');
@@ -939,9 +965,17 @@
     let activitySteps = [];
     let activityFrames = [];
     let operatorChoice = null;
+    let lastVerdict = null;
     function paintActivityStep(index) {
       const scrub = document.querySelector('#activity-scrub'), out = document.querySelector('#activity-step');
       if (!scrub || !out) return;
+      const idle = !activitySteps.length;
+      const play = document.querySelector('#activity-play');
+      if (play) {
+        play.classList.toggle('is-disabled', idle);
+        play.setAttribute('aria-disabled', String(idle));
+      }
+      scrub.disabled = idle;
       scrub.max = String(Math.max(0, activitySteps.length - 1));
       const step = Math.max(0, Math.min(index, Math.max(0, activitySteps.length - 1)));
       scrub.value = String(step);
@@ -983,7 +1017,7 @@
       const list = document.querySelector('#firing-list');
       document.querySelector('#firing-title').textContent = recorded ? 'recorded signals' : 'Firing neurons';
       document.querySelector('#firing-sub').innerHTML = recorded
-        ? `<strong>${na.active || 0}</strong> recorded channels · local replay`
+        ? `<strong>${na.active || 0}</strong> active neurons · recorded replay`
         : `<strong>${na.active || 0}</strong> active · <strong>${na.spikes || 0}</strong> spikes · ${na.window_ms || 80} ms · connectome ${na.steps || 4} steps`;
       list.replaceChildren();
       (na.top || []).forEach((n) => {
@@ -1018,7 +1052,7 @@
           readout.append(p);
         }, 120 * i);
       });
-      const verdict = `The fly says ${think.recommendation === 'WAIT' ? 'WAIT' : actionLabel(think.recommendation)} — confidence ${Math.round(think.confidence * 100)}%, ${think.confidence >= .5 ? 'above' : 'below'} threshold 50%`;
+      const verdict = `The fly says ${think.recommendation === 'WAIT' ? 'WAIT' : actionLabel(think.recommendation)} — confidence ${Math.round(think.confidence * 100)}% (uncalibrated softmax)`;
       const motion = think.recommendation === 'WAIT'
         ? ['Step 1 — Find ICPs: enterprise AI companies', 'Step 2 — Enrich: GTM and platform buyers', `Step 3 — WAIT ${think.wait_days} days — attention contested, no send path`]
         : ['Step 1 — Find ICPs: enterprise AI companies', 'Step 2 — Enrich: GTM and platform buyers', 'Step 3 — Motion: research → buyers → artifact → outreach, never auto-email'];
@@ -1050,8 +1084,10 @@
       const yesKey = document.querySelector('#review-yes');
       const noKey = document.querySelector('#review-no');
       if (!button || button.disabled) return;
+      const pack = activePack;
       button.disabled = true;
       operatorChoice = null;
+      lastVerdict = null;
       status.textContent = 'reading 6 evidence channels…';
       flow.classList.add('is-processing');
       yesKey.classList.remove('is-pressed');
@@ -1067,14 +1103,17 @@
         const response = await fetch(`${apiBase}/api/demo/think`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ evidence: EVIDENCE_PACK(), context: PACKS[activePack].context || {} })
+          body: JSON.stringify({ evidence: PACKS[pack].evidence, context: PACKS[pack].context || {}, pack })
         });
         const think = await response.json();
         if (!response.ok) throw new Error(think.error || `brain service returned ${response.status}`);
+        if (activePack !== pack) { status.textContent = 'run superseded — pack changed'; return; }
         renderThinkFromResponse(think);
         playActivityReplay();
         await new Promise((resolve) => setTimeout(resolve, Math.max(1350, (think.neuron_activity?.steps || 4) * 420)));
+        if (activePack !== pack) { status.textContent = 'run superseded — pack changed'; return; }
         const recommendation = think.recommendation || 'NO';
+        lastVerdict = recommendation;
         if (!operatorChoice) {
           if (recommendation === 'YES') yesKey.classList.add('is-pressed');
           if (recommendation === 'NO') noKey.classList.add('is-pressed');
@@ -1086,26 +1125,32 @@
         scoreChip.classList.add('is-scored');
         const runMode = think.recorded ? 'recorded MaleCNS replay' : 'live MaleCNS connectome run';
         document.querySelector('#decision-copy').textContent = `${think.connectome} returned ${think.decision} at ${confidence}% confidence using ${think.model_version} (${runMode}). Nothing was sent.`;
-        document.querySelector('#proof-source').textContent = think.recorded
-          ? 'Recorded Anthropic + LinkedIn + X evidence'
-          : 'Anthropic + LinkedIn + @claudeai X';
+        const srcNames = sourceNames((think.sources || []).filter((s) => s.verified));
+        document.querySelector('#proof-source').textContent =
+          `${think.recorded ? 'Recorded' : 'Verified'} ${srcNames.join(' + ') || 'pack'} evidence`;
         const modelId = think.model_version || 'unknown';
         const proofModel = document.querySelector('#proof-model');
         proofModel.textContent = modelId.length > 24 ? `${modelId.slice(0, 14)}…${modelId.slice(-6)}` : modelId;
         proofModel.title = modelId;
         document.querySelector('.model-chip').textContent = think.recorded ? 'fly · recorded run' : 'fly · live run';
-        if (!operatorChoice) {
+        const effectiveYes = operatorChoice ? operatorChoice === 'yes' : recommendation === 'YES';
+        if (operatorChoice) {
+          status.textContent = `operator: ${operatorChoice} — model said ${recommendation.toLowerCase()} · ${confidence}%`;
+          document.querySelector('#evidence-verdict').textContent =
+            `${operatorChoice} · operator override · model said ${recommendation.toLowerCase()} ${confidence}%`;
+        } else {
           document.querySelector('#decision-chip').textContent = recommendation === 'YES' ? '✓ Qualified' : recommendation === 'WAIT' ? '◷ Wait' : '× No';
           document.querySelector('#evidence-verdict').textContent = `${recommendation.toLowerCase()} · ${String(think.decision || '').toLowerCase()} · ${confidence}%`;
           status.textContent = `${recommendation.toLowerCase()} — ${String(think.decision || '').toLowerCase()} · ${confidence}%`;
         }
-        document.querySelectorAll('.action-card').forEach(node => node.classList.toggle('is-live', recommendation === 'YES'));
+        document.querySelectorAll('.action-card').forEach(node => node.classList.toggle('is-live', effectiveYes));
         const ready = document.querySelector('.plan-ready');
-        ready.querySelector('.plan-check').textContent = recommendation === 'YES' ? '✓' : recommendation === 'WAIT' ? '◷' : '×';
-        ready.querySelector('strong').textContent = recommendation === 'YES' ? 'Model recommends action' : recommendation === 'WAIT' ? 'Model recommends waiting' : 'Model says do not pursue';
+        ready.querySelector('.plan-check').textContent = effectiveYes ? '✓' : operatorChoice ? '×' : recommendation === 'WAIT' ? '◷' : '×';
+        ready.querySelector('strong').textContent = operatorChoice
+          ? `Operator: ${operatorChoice} — model said ${recommendation}`
+          : recommendation === 'YES' ? 'Model recommends action' : recommendation === 'WAIT' ? 'Model recommends waiting' : 'Model says do not pursue';
         ready.querySelector('small').textContent = `${think.decision} · ${confidence}% confidence`;
-        const finalYes = operatorChoice ? operatorChoice === 'yes' : recommendation === 'YES';
-        document.querySelector('.launch-btn').disabled = !finalYes;
+        document.querySelector('.launch-btn').disabled = !effectiveYes;
       } catch (error) {
         stopActivityPlay();
         status.textContent = 'real brain service unavailable';
@@ -1171,10 +1216,17 @@
         document.getElementById('review-status').textContent = `${answer} — operator override`;
         document.getElementById('decision-chip').textContent = answer === 'yes' ? '✓ Operator: yes' : '× Operator: no';
         document.getElementById('evidence-verdict').textContent = `${answer} · manual override · not model output`;
-        document.querySelector('.launch-btn').disabled = answer !== 'yes';
+        document.querySelector('.launch-btn').disabled = !(answer === 'yes' && lastVerdict);
       };
       document.getElementById('review-yes').addEventListener('click', () => choose('yes'));
       document.getElementById('review-no').addEventListener('click', () => choose('no'));
+      const launchBtn = document.querySelector('.launch-btn');
+      launchBtn.addEventListener('click', () => {
+        if (launchBtn.disabled) return;
+        document.getElementById('review-status').textContent = 'demo only — outreach is never sent';
+        launchBtn.classList.add('is-flash');
+        setTimeout(() => launchBtn.classList.remove('is-flash'), 650);
+      });
       let started = false;
       const begin = () => {
         if (started || intro.classList.contains('is-leaving')) return;

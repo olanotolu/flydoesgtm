@@ -12,6 +12,12 @@ job skills are ours.
   by electron microscopy, loaded via the `flybrain` package
   (`alextitonis/fly.ai`, MIT). We never modify the connectome. A test
   asserts the weight checksum is identical before and after training.
+  Scope note on that checksum (`809ef608…ae6020`, in
+  `results/manifest.json`): `weights_checksum` (`brain/loader.py:44-49`)
+  hashes the in-memory `brain.weights` sparse array the runtime actually
+  steps — i.e. the edge list *after* the `sensory_input=False` deletion —
+  not the raw downloaded dataset, and the 25,582,938 figure is the edge
+  count of that same runtime sparse array.
 - The dynamics: leaky integrate-and-fire over the real signed adjacency
   (synapse-count weights, neurotransmitter-inferred signs, per-neuron
   input normalization) — the same approximation every current
@@ -80,3 +86,9 @@ job skills are ours.
   interface synapses.
 - That demo metrics are real unless they came from a recorded run;
   scripted-scenario numbers are labeled `demo/simulated`.
+- That the deployed policy *cannot* say no. `IGNORE` is reachable by
+  construction — the brain-only `noraw` arm fires it ~84×/world — but the
+  shipped checkpoints never emit it: the teacher's IGNORE branch was
+  deleted (`environment/teacher.py`) and PPO keeps a 0.2× imitation
+  anchor to that teacher (`learning/ppo.py`). A trained-in disposition,
+  not an architectural limit.

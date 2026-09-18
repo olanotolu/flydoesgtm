@@ -18,7 +18,9 @@ traces (50ms / 150ms / 500ms) from the fly's descending/ascending/
 Kenyon-cell populations. GAE propagates delayed account outcomes through
 account-local action histories, and a reward-weighted sensory interface
 adapts channel injection gains. The connectome checksum is asserted
-before and after training.
+before and after training; it covers the loaded post-`sensory_input=False`
+sparse edge array (the runtime graph), not the raw dataset — see
+ARCHITECTURE.md for the exact scope.
 
 So the experiment is not "a fly learned sales." It is:
 
@@ -97,6 +99,34 @@ paired held-out worlds, twenty seeds per arm, bootstrap confidence intervals,
 and multiplicity correction before any architecture claim is made. Training
 metrics are written by the run; no dashboard number should be copied into the
 demo unless it came from a recorded run.
+
+The eval protocol as actually run: **6 paired seeds** (777–811) per arm on
+identical held-out worlds under each economy, paired bootstrap CIs and Holm
+correction — see `results/eval_summary.json` / `results/eval_v2_summary.json`.
+Twenty seeds remains the bar before any architecture claim; at 6 seeds the
+paired deltas are directional, not settled.
+
+## What the evals actually show
+
+Under the v2 economy (rent + kill bonus + universal expiry), paired 6-seed
+means: fly +32, MLP +2832, shuffled +1080, brain-only noraw −195. The MLP
+still leads; the fly at least acts (≈23 emails/world) where the v1 policy
+parked every account. The longest training run so far — `long2`, the v2
+recipe at 120 episodes — reached best_val +3728 (training-curve max,
+`remote_results_long2/metrics.json`), above the MLP arm's +2832 eval mean.
+
+`IGNORE` is reachable by construction, not architecturally blocked: the
+brain-only noraw arm uses it ~84×/world. The deployed raw-head checkpoints
+never emit it, because the warm-start teacher's IGNORE branch was deleted
+(`environment/teacher.py`) and PPO carries a 0.2× imitation anchor to that
+teacher (`learning/ppo.py:67-73`) — a trained-in disposition, not a limit of
+the substrate. The asymmetry is itself a finding: with the raw-observation
+head removed the policy over-IGNOREs, so the connectome pathway carries the
+kill signal while the raw head suppresses it.
+
+The decisive ablation is still missing and is being run: a no-brain
+(feat=0) control — the same checkpoint with brain features zeroed, intact,
+and permuted — to isolate what the connectome pathway contributes.
 
 ## Demo beat
 

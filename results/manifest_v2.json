@@ -1,0 +1,51 @@
+{
+ "checkpoint": "results/fly_policy.pt",
+ "checkpoint_sha256": "60b143292047a4acb8d3de282968ec5931f866ed2aa8e4230c5cac16eb153590",
+ "connectome": "malecns-v1.0 post-sensory_input sha256 809ef60873eba5df0869eeb692e0154f41a42b2d731bb0603c516e2630ae6020",
+ "connectome_sha256": "809ef60873eba5df0869eeb692e0154f41a42b2d731bb0603c516e2630ae6020",
+ "eval": {
+  "best_val": -119.74000886455178,
+  "note": "checkpoint bytes identical to the remote_results_v2 pull; that run's metrics apply",
+  "source": "remote_results_v2/metrics.json"
+ },
+ "git_commit": "11c5806a7217e79b864f53de0b0e86b1bae17c57-dirty",
+ "local_checkpoints": {
+  "results/fly_policy.pt": {
+   "family": "v2 fly",
+   "identical_to": "remote_results_v2/fly_policy.pt",
+   "sha256": "60b143292047a4acb8d3de282968ec5931f866ed2aa8e4230c5cac16eb153590"
+  },
+  "results/fly_policy_v1.pt": {
+   "family": "v1 fly",
+   "identical_to": "remote_results/fly_policy.pt",
+   "sha256": "ee0319d465e512f8676a76017fd4a012d6b992fe47210a003d8e0ccba9c56bdc"
+  },
+  "results/mlp_policy.pt": {
+   "family": "v2 mlp",
+   "identical_to": "remote_results_mlp_v2/mlp_policy.pt",
+   "sha256": "163626d6f0f7f4ed6b8dab1884805a7aec0a7fcc96f97389f0a689b8520db171"
+  },
+  "results/mlp_policy_v1.pt": {
+   "family": "v1 mlp",
+   "identical_to": "remote_results_mlp/mlp_policy.pt",
+   "sha256": "d6b30f6dd59b55624febb8eec9023f2f8bac4d70d4aa2bfed2f8fd963945883c"
+  }
+ },
+ "model_version": "fly-11c5806a7217e79b864f53de0b0e86b1bae17c57-dirty-10000",
+ "n_feat": 12012,
+ "produced_by": "modal_train.py",
+ "readout_arch": "cosine-v2",
+ "role": "deployed v2 serving checkpoint (v2 kill economy: rent + kill_bonus + universal expiry)",
+ "seed": 10000,
+ "sim_steps": 12,
+ "state_sha256": "194ceec71232f6a2b2c3fe22b9520663b909620c62275624de5c12eb3df0e9d4",
+ "trained_on": "modal B200",
+ "use_raw_head": true,
+ "world_kwargs": {
+  "ep_mult": 1,
+  "expire_all": true,
+  "kill_bonus": 3,
+  "kill_penalty": 0,
+  "rent": 0.05
+ }
+}

@@ -43,5 +43,10 @@
     "researches": 14,
     "enriches": 17,
     "spent": 350
+  },
+  {
+    "policy": "teacher",
+    "status": "pending",
+    "note": "ARCHITECTURE.md reports the teacher (environment/teacher.py rules_action) as a separate baseline, but it has not been run through this harness yet. Measured separately over 5 seeds (128 accounts x 45 days, v1 economy): 1372.7 mean economics with the IGNORE branch, 2995.0 with it deleted (current code). See teacher.py docstring."
   }
 ]

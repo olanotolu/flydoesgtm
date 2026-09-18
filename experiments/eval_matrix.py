@@ -7,6 +7,7 @@ encoder gains, which are part of the policy, so they are applied.
 """
 import argparse
 import json
+import os
 from pathlib import Path
 
 import numpy as np

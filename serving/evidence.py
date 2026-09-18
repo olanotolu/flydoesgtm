@@ -33,6 +33,8 @@ def adapt_evidence_to_signals(evidence: dict[str, Any]) -> dict[str, Any]:
     hiring = _verified(evidence, "hiring")
     job_change = _verified(evidence, "job_change")
     negative = _verified(evidence, "negative")
+    layoffs = _verified(evidence, "layoffs")
+    board = _verified(evidence, "board")
 
     # Unknown account dimensions stay neutral. Each channel moves only on
     # verified evidence of its own kind — a launch is not funding proof.
@@ -42,7 +44,11 @@ def adapt_evidence_to_signals(evidence: dict[str, Any]) -> dict[str, Any]:
         "intent": round(min(1.0, 0.5 + 0.12 * launch + 0.08 * enterprise
                             + 0.05 * pricing + 0.03 * linkedin + 0.02 * x_post), 4),
         "job_change": round(min(1.0, 0.5 + 0.15 * job_change), 4),
-        "negative": round(min(1.0, 0.5 + 0.20 * negative), 4),
+        # Corroborating verified distress keys stack onto the negative
+        # channel — a Chapter 11 with confirmed layoffs and a board exodus
+        # is stronger evidence than a lone negative headline.
+        "negative": round(min(1.0, 0.5 + 0.20 * negative
+                              + 0.12 * layoffs + 0.08 * board), 4),
         "trigger": round(min(1.0, 0.5 + 0.27 * launch + 0.06 * linkedin
                              + 0.07 * x_post + 0.05 * enterprise
                              + 0.05 * target), 4),
@@ -67,9 +73,13 @@ def adapt_evidence_to_signals(evidence: dict[str, Any]) -> dict[str, Any]:
          "rule": "verified champion job change" if job_change
          else "no verified champion job change"},
         {"channel": "negative", "value": signals["negative"],
-         "status": "derived" if negative else "unknown_neutral",
-         "rule": "verified negative event" if negative
-         else "no verified negative event"},
+         "status": "derived" if (negative or layoffs or board)
+         else "unknown_neutral",
+         "rule": "verified negative event + corroborating distress"
+         if (negative or layoffs or board)
+         else "no verified negative event",
+         "inputs": {"negative": negative, "layoffs": layoffs,
+                    "board": board}},
         {"channel": "trigger", "value": signals["trigger"],
          "status": "derived", "rule": "verified launch + social confirmation + target",
          "inputs": {"launch": launch, "linkedin": linkedin, "x": x_post,

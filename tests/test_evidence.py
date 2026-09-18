@@ -32,3 +32,28 @@ def test_unverified_x_is_excluded_without_becoming_negative():
     out = adapt_evidence_to_signals(data)
     assert out["excluded"] == [{"source": "x", "reason": "not publicly verified"}]
     assert out["signals"]["negative"] == 0.5
+
+
+def test_verified_distress_signals_stack_on_negative():
+    data = {"negative": {"verified": True}}
+    assert adapt_evidence_to_signals(data)["signals"]["negative"] == 0.7
+    data["layoffs"] = {"verified": True}
+    assert adapt_evidence_to_signals(data)["signals"]["negative"] == 0.82
+    data["board"] = {"verified": True}
+    assert adapt_evidence_to_signals(data)["signals"]["negative"] == 0.9
+
+
+def test_unverified_distress_signals_do_not_stack():
+    data = {"negative": {"verified": True},
+            "layoffs": {"verified": False},
+            "board": {"event": "director_exodus"}}
+    out = adapt_evidence_to_signals(data)
+    assert out["signals"]["negative"] == 0.7
+    rule = next(p for p in out["provenance"] if p["channel"] == "negative")
+    assert rule["inputs"] == {"negative": True, "layoffs": False, "board": False}
+
+
+def test_distress_without_negative_still_derives():
+    out = adapt_evidence_to_signals({"layoffs": {"verified": True},
+                                     "board": {"verified": True}})
+    assert out["signals"]["negative"] == 0.7

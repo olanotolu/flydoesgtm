@@ -15,7 +15,13 @@ from urllib.parse import urlsplit
 ROOT = Path(__file__).parents[1]
 DEMO = (ROOT / "demo").resolve()
 REPLAY = json.loads((ROOT / "demo" / "replay.json").read_text())
-THINK_REPLAY = json.loads((ROOT / "demo" / "think_replay_anthropic.json").read_text())
+THINK_REPLAYS = {
+    pack: json.loads((ROOT / "demo" / f"think_replay_{pack}.json").read_text())
+    for pack in ("anthropic", "warm", "cold")
+}
+LIVE_THINK_URL = os.environ.get(
+    "LIVE_THINK_URL",
+    "https://olaoluwasubxmi--think.modal.run/api/demo/think")
 DEFAULT_QUERY = ('select from people where location_country = "United States" '
                  'and experiences.any(is_current = true and '
                  'job_title is_similar_to ("Owner", "Founder", "Chief Operating Officer", '
@@ -109,9 +115,28 @@ def payload_for(path, method, body=b""):
             return 200, json.loads(summary.read_text())
         return 404, {"error": "route not found"}
     if method == "POST" and path == "/api/demo/think":
-        # The public deployment intentionally replays the reviewed, sourced
-        # brain run. The local service remains the live connectome path.
-        return 200, {**THINK_REPLAY, "recorded": True, "mode": "recorded_replay"}
+        # Live first: proxy the real connectome service on Modal. If it is
+        # unreachable, fall back to the recorded replay for the requested
+        # pack — the response's `recorded` flag keeps the UI honest either
+        # way.
+        try:
+            request = json.loads(body or b"{}")
+        except json.JSONDecodeError:
+            return 400, {"error": "request body is invalid"}
+        try:
+            live = urllib.request.Request(
+                LIVE_THINK_URL,
+                data=json.dumps({"evidence": request.get("evidence") or {},
+                                 "context": request.get("context") or {}}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST")
+            with urllib.request.urlopen(live, timeout=20) as response:
+                return 200, json.loads(response.read())
+        except Exception:
+            replay = THINK_REPLAYS.get(request.get("pack"),
+                                       THINK_REPLAYS["anthropic"])
+            return 200, {**replay, "recorded": True,
+                         "mode": "recorded_replay"}
     if method == "POST" and path == "/api/demo/run":
         try:
             request = json.loads(body or b"{}")
