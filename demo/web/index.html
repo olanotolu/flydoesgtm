@@ -343,7 +343,6 @@
       .score-chip { justify-self: start; }
       .evidence-panel, .activity-panel { min-height: 0; padding: 18px; }
       .evidence-fly-stage { min-height: 330px; }
-      .decision-proof { padding-inline: 4px; }
     }
 
     /* Flat GTM review demo — intentionally separate from the legacy 3D workspace. */
@@ -460,8 +459,6 @@
     .firing-row em { grid-row: 1 / 3; grid-column: 2; align-self: center; color: #5e5952; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; font-style: normal; }
     .firing-main { display: grid; gap: 2px; }
     .firing-main span { color: #8b857c; font-size: 11px; }
-    .evidence-verdict { display: inline-flex; align-items: center; gap: 9px; padding: 10px 16px; border: 1px solid rgba(55,153,94,.18); border-radius: 999px; background: #f1faf3; color: #35734a; font-size: 11px; font-weight: 750; }
-    .evidence-verdict::before { display: grid; width: 18px; height: 18px; place-items: center; border-radius: 50%; background: #d9f1df; content: "✓"; font-size: 11px; }
     .activity-head { display: flex; justify-content: space-between; gap: 12px; }
     .activity-time { color: #827b72; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; }
     .data-provenance { display: grid; gap: 7px; margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(108,98,82,.1); color: #878077; font-size: 9.5px; }
@@ -485,15 +482,12 @@
     .meter-labels { display: flex; justify-content: space-between; color: #8e877e; font-size: 9px; }
     .meter-track { height: 4px; margin-top: 7px; overflow: hidden; border-radius: 999px; background: #e6e2da; }
     .meter-fill { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#3f9565,#91b33e); transition: width .45s ease; }
-    .decision-proof { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 18px; padding: 7px 0 2px; color: #767066; font-size: 12px; text-align: center; }
-    .eval-strip { grid-column: 1 / -1; text-align: center; color: #a39a8d; font-size: 10.5px; letter-spacing: .02em; padding: 0 0 2px; }
-    .decision-chip { padding: 9px 15px; border: 1px solid rgba(55,153,94,.2); border-radius: 999px; background: #eff9f1; color: #33734a; font-weight: 750; }
     @keyframes review-in { from { opacity: 0; } to { opacity: 1; } }
     @keyframes path-run { to { stroke-dashoffset: -38; } }
     @keyframes status-pulse { to { opacity: .25; transform: scale(.75); } }
     @media (max-width: 1080px) { .review-shell { padding-inline: 22px; } .review-flow { grid-template-columns: minmax(240px,290px) 52px minmax(340px,460px) 52px minmax(250px,300px); } .review-nav { gap: 18px; } }
     @media (max-width: 1080px) { .review-evidence { grid-template-columns: 1fr 1.4fr; } }
-    @media (max-width: 840px) { .review-screen { overflow: auto; } .review-shell { padding: 20px 16px 30px; } .review-logo { width: 105px; } .review-nav { display: none; } .review-question { margin-top: 34px; } .review-flow { grid-template-columns: 1fr; gap: 16px; min-height: 0; margin-top: 34px; } .review-paths, .review-stage-pill { display: none; } .review-left, .review-right { width: min(100%, 520px); justify-self: center; } .review-center { order: -1; } .review-fly-wrap { width: min(100%, 340px); } .review-caption { margin-top: 30px; } .review-evidence { grid-template-columns: 1fr; margin-top: 48px; } .activity-panel { grid-column: auto; } .decision-proof { flex-direction: column; gap: 8px; } }
+    @media (max-width: 840px) { .review-screen { overflow: auto; } .review-shell { padding: 20px 16px 30px; } .review-logo { width: 105px; } .review-nav { display: none; } .review-question { margin-top: 34px; } .review-flow { grid-template-columns: 1fr; gap: 16px; min-height: 0; margin-top: 34px; } .review-paths, .review-stage-pill { display: none; } .review-left, .review-right { width: min(100%, 520px); justify-self: center; } .review-center { order: -1; } .review-fly-wrap { width: min(100%, 340px); } .review-caption { margin-top: 30px; } .review-evidence { grid-template-columns: 1fr; margin-top: 48px; } .activity-panel { grid-column: auto; } }
   </style>
 </head>
 <body>
@@ -615,8 +609,6 @@
           <canvas id="fly-body" height="190" aria-label="Rotating fruit fly body model"></canvas>
           <div class="data-provenance"><span>Body <strong>flybody · DeepMind × HHMI Janelia</strong></span><span>Source <strong>TuragaLab/flybody · Apache-2.0</strong></span><span>Render <strong>surface point sample · no physics</strong></span></div>
         </aside>
-        <div class="decision-proof"><span class="evidence-verdict" id="evidence-verdict">awaiting run</span><span class="decision-chip" id="decision-chip">Ready to run</span><span id="decision-copy">External facts are sourced; the GTM score and draft are demo-derived. Nothing is sent.</span></div>
-        <div class="eval-strip" id="eval-strip" hidden></div>
       </section>
     </div>
   </section>
@@ -853,11 +845,7 @@
       proofModel.textContent = 'fly-demo-evidence-v1';
       proofModel.removeAttribute('title');
       document.querySelector('.model-chip').textContent = 'fly · recorded replay';
-      document.getElementById('decision-copy').textContent =
-        'External facts are sourced; the GTM score and draft are demo-derived. Nothing is sent.';
       document.getElementById('review-status').textContent = 'ready to run';
-      document.getElementById('decision-chip').textContent = 'Ready to run';
-      document.getElementById('evidence-verdict').textContent = 'awaiting run';
       const score = document.getElementById('model-score');
       score.textContent = 'pending'; score.classList.remove('is-scored');
       document.getElementById('meter-fill').style.width = '0%';
@@ -1169,8 +1157,6 @@
         const scoreChip = document.querySelector('#model-score');
         scoreChip.textContent = `${confidence}/100`;
         scoreChip.classList.add('is-scored');
-        const runMode = think.recorded ? 'recorded MaleCNS replay' : 'live MaleCNS connectome run';
-        document.querySelector('#decision-copy').textContent = `${think.connectome} returned ${think.decision} at ${confidence}% confidence using ${think.model_version} (${runMode}). Nothing was sent.`;
         const srcNames = sourceNames((think.sources || []).filter((s) => s.verified));
         document.querySelector('#proof-source').textContent =
           `${think.recorded ? 'Recorded' : 'Verified'} ${srcNames.join(' + ') || 'pack'} evidence`;
@@ -1182,12 +1168,7 @@
         const effectiveYes = operatorChoice ? operatorChoice === 'yes' : recommendation === 'YES';
         if (operatorChoice) {
           status.textContent = `operator: ${operatorChoice} — model said ${recommendation.toLowerCase()} · ${confidence}%`;
-          document.querySelector('#evidence-verdict').textContent =
-            `${operatorChoice} · operator override · model said ${recommendation.toLowerCase()} ${confidence}%`;
         } else {
-          const actWord = String(think.decision || '').toLowerCase();
-          document.querySelector('#decision-chip').textContent = (recommendation === 'YES' ? '✓ Qualified · ' : recommendation === 'WAIT' ? '◷ Wait · ' : '× No · ') + actWord;
-          document.querySelector('#evidence-verdict').textContent = `${recommendation.toLowerCase()} · ${String(think.decision || '').toLowerCase()} · ${confidence}%`;
           status.textContent = `${recommendation.toLowerCase()} — ${String(think.decision || '').toLowerCase()} · ${confidence}%`;
         }
         document.querySelectorAll('.action-card').forEach(node => node.classList.toggle('is-live', effectiveYes));
@@ -1201,9 +1182,6 @@
       } catch (error) {
         stopActivityPlay();
         status.textContent = 'real brain service unavailable';
-        document.querySelector('#decision-chip').textContent = 'Run unavailable';
-        document.querySelector('#decision-copy').textContent = 'Start the local service at http://127.0.0.1:8090. No simulated decision was substituted.';
-        document.querySelector('#evidence-verdict').textContent = 'no result · backend required';
         document.querySelector('#fly-decision').hidden = false;
         document.querySelector('#fly-decision-verdict').textContent = error.message;
         document.querySelector('#fly-decision-confidence').textContent = 'No confidence score produced';
@@ -1252,7 +1230,6 @@
       if (!intro || !start) return;
       const startReview = () => {
         document.getElementById('review-status').textContent = 'ready to run';
-        document.getElementById('decision-chip').textContent = 'Ready to run';
       };
       const choose = (answer) => {
         operatorChoice = answer;
@@ -1261,8 +1238,6 @@
         yes.classList.toggle('is-pressed', answer === 'yes');
         no.classList.toggle('is-pressed', answer === 'no');
         document.getElementById('review-status').textContent = `${answer} — operator override`;
-        document.getElementById('decision-chip').textContent = answer === 'yes' ? '✓ Operator: yes' : '× Operator: no';
-        document.getElementById('evidence-verdict').textContent = `${answer} · manual override · not model output`;
         document.querySelector('.launch-btn').disabled = !(answer === 'yes' && lastVerdict);
       };
       document.getElementById('review-yes').addEventListener('click', () => choose('yes'));
@@ -1318,27 +1293,6 @@
         .add({ targets: panels[0], translateX: '-101vw', duration: 370 }, '-=250')
         .add({ duration: 1, complete: () => { splash.remove(); } });
     };
-    (async () => {
-      try {
-        const apiBase = window.location.protocol === 'file:' ? 'http://127.0.0.1:8090' : '';
-        const response = await fetch(`${apiBase}/api/demo/eval`);
-        if (!response.ok) return;
-        const data = await response.json();
-        const arms = data.arms || {};
-        const deltas = data.paired_vs_fly || {};
-        const fmt = (v) => `${v >= 0 ? '+' : '−'}${Math.abs(Math.round(v))}`;
-        const parts = Object.keys(arms).map((a) => `${a.replace(/_/g, ' ')} ${fmt(arms[a].mean)}`);
-        const mlp = deltas.mlp;
-        const extra = mlp ? ` · mlp−fly Δ ${fmt(mlp.mean_delta)} [${fmt(mlp.ci95[0])}…${fmt(mlp.ci95[1])}]` : '';
-        const strip = document.querySelector('#eval-strip');
-        strip.textContent = `paired eval · v2 economy · ${(data.seeds || []).length} seeds × 160 accounts · ${parts.join(' · ')}${extra}`;
-        if (data.prior && data.prior.arms) {
-          const pp = data.prior.arms;
-          strip.textContent += ` — ${data.prior.label || 'prior'}: ${Object.keys(pp).map((a) => `${a.replace(/_/g, ' ')} ${fmt(pp[a].mean)}`).join(' · ')}`;
-        }
-        strip.hidden = false;
-      } catch (e) { /* no eval data — strip stays hidden */ }
-    })();
   </script>
 </body>
 </html>
