@@ -7,6 +7,19 @@ MINIBATCH = 4096
 CLIP = 0.2
 ENTROPY_COEF = 0.01
 VALUE_COEF = 0.5
+# The readout used to be a plain Linear over ~12,000 non-negative log1p
+# spike traces, so its output grew with the feature count: measured logits
+# reached ~1e3 against returns of ~3. PPO's importance ratio is
+# exp(logp - logp_old), which overflows float32 once logits move ~88 apart,
+# so the second update turned the whole policy to NaN.
+#
+# That is now fixed at the source, in learning.policy: a cosine readout plus
+# a tanh squash bounds every logit to +-LOGIT_MAX by construction. The
+# clamp that used to sit in `ppo_update` has been deleted rather than left
+# in place, because it was masking the real bug and, once the logits were
+# genuinely bounded, could never fire again. Gradient clipping is kept as
+# ordinary PPO hygiene, not as the fix.
+GRAD_CLIP = 1.0
 
 
 def generalized_advantage(rewards, values, dones, gamma=0.99, lam=0.95):
@@ -39,6 +52,7 @@ def ppo_update(policy, opt, traj):
         for i in range(0, n, MINIBATCH):
             b = perm[i:i + MINIBATCH]
             logits, value = policy(feat[b], obs[b])
+            # Already bounded to +-LOGIT_MAX inside the policy; no clamp here.
             if action_mask is not None:
                 logits = logits.masked_fill(~action_mask[b], -1e9)
             dist = Categorical(logits=logits)
@@ -59,4 +73,5 @@ def ppo_update(policy, opt, traj):
                 - ENTROPY_COEF * entropy + 0.2 * imitation
             opt.zero_grad()
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(policy.parameters(), GRAD_CLIP)
             opt.step()

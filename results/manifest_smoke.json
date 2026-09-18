@@ -1,0 +1,28 @@
+{
+  "checkpoint": "results/fly_policy.pt",
+  "connectome_sha256": "809ef60873eba5df0869eeb692e0154f41a42b2d731bb0603c516e2630ae6020",
+  "curriculum": [
+    {
+      "allowed": "{0, 1, 2, 4}",
+      "days": 15,
+      "episodes": 6,
+      "lam": 0.25,
+      "n": 24,
+      "name": "smoke 24acc/15d/4act"
+    },
+    {
+      "allowed": "{0, 1, 2, 3, 4, 5, 6}",
+      "days": 20,
+      "episodes": 4,
+      "lam": 0.25,
+      "n": 48,
+      "name": "smoke 48acc/20d/7act"
+    }
+  ],
+  "git_commit": "11c5806a7217e79b864f53de0b0e86b1bae17c57",
+  "model_version": "fly-11c5806a7217e79b864f53de0b0e86b1bae17c57-10000",
+  "seed": 10000,
+  "sim_steps": 12,
+  "state_sha256": "410a6c00e676d0f881f6e02da7a6bf34854a90eba51988a564884ccf59fb67ef",
+  "trainable_params": 84201
+}

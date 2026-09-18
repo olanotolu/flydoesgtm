@@ -1,8 +1,9 @@
 """PPO curriculum over the frozen fly brain.
 
-    python -m learning.train            # local smoke (CPU, small worlds)
-    python -m learning.train --full     # full curriculum (GPU/Modal)
-    python -m learning.train --mlp      # parameter-matched dense baseline
+    python -m learning.train                 # local smoke (CPU, small worlds)
+    python -m learning.train --full          # full curriculum (GPU/Modal)
+    python -m learning.train --mlp           # parameter-matched dense baseline
+    python -m learning.train --no-raw-head   # fly-only: no raw-obs bypass
 
 The brain batch dimension == number of accounts: fly i only ever sees
 account i, so the whole day is stepped in lockstep.
@@ -18,10 +19,11 @@ from brain.loader import get_brain, weights_checksum
 from brain.populations import build_channel_map, tracked_set
 from environment.clay_world import World
 from learning.encoder import Encoder
-from learning.policy import FlyPolicy, MLPPolicy, matched_mlp_hidden, parameter_count
+from learning.policy import (FlyPolicy, MLPPolicy, matched_mlp_hidden,
+                             parameter_count, READOUT_ARCH)
 from learning.ppo import ppo_update
 from learning.pretrain import warm_start
-from learning.rollout import run_episode, evaluate
+from learning.rollout import run_episode, evaluate, SIM_STEPS
 from learning.trace import BatchTrace
 from learning.reproducibility import (git_commit, seed_everything,
                                        state_checksum, write_manifest)
@@ -49,11 +51,19 @@ CONSERVE = 0.03
 
 def run(curriculum, brain_device="cpu", torch_device=None,
         out_dir="results", train_mlp=False, seed0=10_000,
-        val_every=5, verbose=True):
+        val_every=5, verbose=True, use_raw_head=True, brain_data=None,
+        world_kwargs=None, ep_mult=1.0):
     """Shared trainer for local runs and Modal remote calls.
 
     Returns (best_val, save_path). Writes checkpoints + metrics.json
-    into out_dir."""
+    into out_dir.
+
+    `use_raw_head=False` removes the policy's direct linear path from the
+    16 raw observation channels to the action scores, so every action has
+    to be read out of the connectome. Use it for any run whose result is
+    meant to support the claim that the *fly* is deciding: with the raw
+    head on, a working policy is not evidence that the brain did anything.
+    """
     import json
     from pathlib import Path
     out = Path(out_dir)
@@ -75,8 +85,11 @@ def run(curriculum, brain_device="cpu", torch_device=None,
     encoder_gains = None
     best_encoder_gains = None
     for si, stage in enumerate(curriculum):
+        stage = dict(stage)
+        stage["episodes"] = int(stage["episodes"] * ep_mult)
         print(f"\n== {stage['name']} ==", flush=True)
-        brain = get_brain(batch=stage["n"], device=brain_device)
+        brain = get_brain(batch=stage["n"], device=brain_device,
+                          data=brain_data)
         w_sha = weights_checksum(brain=brain)
         print(f"connectome sha256: {w_sha[:16]}...  (frozen)", flush=True)
         ch_map = build_channel_map(brain)
@@ -87,12 +100,14 @@ def run(curriculum, brain_device="cpu", torch_device=None,
             print(f"  tracked features: {trace.F} neurons, "
                   f"{len(ch_map)} channels", flush=True)
         if train_mlp:
-            target = parameter_count(FlyPolicy(trace.F * trace.n_scales))
+            target = parameter_count(FlyPolicy(trace.F * trace.n_scales,
+                                               use_raw_head=use_raw_head))
             hidden, matched = matched_mlp_hidden(target)
             policy = MLPPolicy(16, hidden).to(device)
             save_to = out / "mlp_policy.pt"
         else:
-            policy = FlyPolicy(trace.F * trace.n_scales).to(device)
+            policy = FlyPolicy(trace.F * trace.n_scales,
+                               use_raw_head=use_raw_head).to(device)
             if best_state is not None:          # carry weights between stages
                 policy.load_state_dict(best_state)
             save_to = out / "fly_policy.pt"
@@ -115,7 +130,8 @@ def run(curriculum, brain_device="cpu", torch_device=None,
         for e in range(stage["episodes"]):
             world = World(n_accounts=stage["n"], days=stage["days"],
                           seed=seed0 + ep, lambda_cost=stage["lam"],
-                          conserve_coef=CONSERVE, vary_costs=True)
+                          conserve_coef=CONSERVE, vary_costs=True,
+                          **(world_kwargs or {}))
             traj = run_episode(brain, trace, enc, policy, world,
                                stage["allowed"], device)
             ppo_update(policy, opt, traj)
@@ -126,7 +142,8 @@ def run(curriculum, brain_device="cpu", torch_device=None,
                 val, st = evaluate(brain, trace, enc, policy, device,
                                    seed=seed0 + 50_000 + ep,
                                    n=min(stage["n"], 200),
-                                   days=min(stage["days"], 45))
+                                   days=min(stage["days"], 45),
+                                   world_kwargs=world_kwargs)
                 flag = ""
                 if val > stage_val:
                     stage_val = val
@@ -163,10 +180,12 @@ def run(curriculum, brain_device="cpu", torch_device=None,
         "n_feat": trace.F * trace.n_scales,
         "w_sha256": w_sha,
         "encoder_gains": encoder_gains.tolist(),
-        "sim_steps": int(os.environ.get("FLY_SIM_STEPS", "4")),
+        "sim_steps": SIM_STEPS,
         "seed": seed0,
         "model_version": f"fly-{git_commit(root) or 'working-tree'}-{seed0}",
         "use_raw_head": bool(getattr(policy, "use_raw_head", True)),
+        "substrate": "malecns-v1.0" if brain_data is None else str(brain_data),
+        "readout_arch": READOUT_ARCH,
         "state_sha256": state_checksum(final_state),
     }
     torch.save(checkpoint, save_to)
@@ -191,7 +210,8 @@ def run(curriculum, brain_device="cpu", torch_device=None,
 
 def main():
     curriculum = FULL if "--full" in sys.argv else SMOKE
-    run(curriculum, train_mlp="--mlp" in sys.argv)
+    run(curriculum, train_mlp="--mlp" in sys.argv,
+        use_raw_head="--no-raw-head" not in sys.argv)
 
 
 if __name__ == "__main__":

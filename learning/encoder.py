@@ -3,12 +3,19 @@
 obs row k describes account lanes[k] — lane index == account index ==
 batch fly index. Inactive lanes get zero current (their fly idles on
 noise). Amounts are volts added per step; the LIF threshold is 1.0 and
-resting tonic is 0.14, so ~0.3-0.8 is a strong but non-saturating
-drive.
+resting tonic is 0.14, so a saturated channel at gain 1.0 delivers ~1.0 V.
+
+DEFAULT_GAIN is 1.0 because it is measured, not chosen. At gain 0.6 the
+injected signal does not out-shout the connectome's own activity before
+the readout window closes: a linear probe on the resulting traces reached
+only 52.8% accuracy separating four account qualities, with 3.4% of
+features ever firing. At gain 1.0 that rises to 85.7%. Gain 1.5 is worse
+again (73.0%) — over-driving saturates the substrate. See
+`experiments/sensitivity.py` and `results/sensitivity.json`.
 """
 import numpy as np
 
-DEFAULT_GAIN = 0.6
+DEFAULT_GAIN = 1.0
 
 
 class Encoder:

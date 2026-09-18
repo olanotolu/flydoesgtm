@@ -26,13 +26,20 @@ def seed_everything(seed: int) -> None:
 
 
 def git_commit(root: str | Path) -> str | None:
+    """Local HEAD, falling back to FLY_GIT_COMMIT.
+
+    Modal's `add_local_python_source` copies the package without `.git`, so
+    the remote container cannot derive the commit itself. The entrypoint
+    reads it from the local checkout and passes it through the environment,
+    which keeps checkpoint and manifest provenance intact.
+    """
     try:
         return subprocess.run(
             ["git", "-C", str(root), "rev-parse", "HEAD"],
             capture_output=True, text=True, check=True,
         ).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
-        return None
+        return os.environ.get("FLY_GIT_COMMIT") or None
 
 
 def state_checksum(state: dict[str, Any]) -> str:

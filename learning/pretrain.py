@@ -32,6 +32,11 @@ def warm_start(policy, brain, trace, enc, world, device, epochs=20):
     if not feats:
         return 0.0
     x = torch.cat(feats); raw = torch.cat(obs); y = torch.cat(labels)
+    # `temperature` is deliberately left out: it is the knob that sets the
+    # logit scale, and letting an unregularised cross-entropy fit raise it
+    # is how the readout ended up with |logit| ~ 880. The warm start only
+    # needs to point the readout in the right direction; PPO can raise the
+    # temperature later if confidence actually helps.
     opt = torch.optim.Adam(
         list(policy.readout.parameters()) +
         list(policy.sensory_head.parameters()) +
@@ -40,7 +45,9 @@ def warm_start(policy, brain, trace, enc, world, device, epochs=20):
     for _ in range(epochs):
         logits, _ = policy(x, raw)
         loss = F.cross_entropy(logits, y)
-        opt.zero_grad(); loss.backward(); opt.step()
+        opt.zero_grad(); loss.backward()
+        torch.nn.utils.clip_grad_norm_(policy.parameters(), 1.0)
+        opt.step()
     with torch.no_grad():
         accuracy = (policy(x, raw)[0].argmax(1) == y).float().mean()
     return float(accuracy.cpu())

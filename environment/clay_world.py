@@ -43,13 +43,19 @@ class World:
                  seed=0, lambda_cost=0.0, conserve_coef=0.0,
                  conv_mult=1.0, cost_mult=1.0, intent_shift=0.0,
                  vary_costs=False, liar_frac=0.10,
-                 reward_profile="balanced", reward_overrides=None):
+                 reward_profile="balanced", reward_overrides=None,
+                 rent=0.0, kill_bonus=0.0, kill_penalty=0.0,
+                 expire_all=False):
         self.rng = np.random.default_rng(seed)
         self.n = n_accounts
         self.days = days
         self.daily_budget = daily_budget
         self.lambda_cost = lambda_cost
         self.conserve_coef = conserve_coef
+        self.rent = rent
+        self.kill_bonus = kill_bonus
+        self.kill_penalty = kill_penalty
+        self.expire_all = expire_all
         if reward_profile not in REWARD_PROFILES:
             raise ValueError(f"unknown reward profile: {reward_profile}")
         self.outcome_reward = dict(OUTCOME_REWARD)
@@ -120,6 +126,7 @@ class World:
             "closed": 0, "unsubscribes": 0, "spam": 0,
             "emails": 0, "escalations": 0, "researches": 0,
             "enriches": 0, "spent": 0.0,
+            "ignored": 0, "rent_paid": 0.0,
         }
 
     def _add_ledger(self, slot, credit_amount, econ_amount=None):
@@ -271,9 +278,11 @@ class World:
         # slow drift + fatigue decay
         self.fatigue *= 0.95
 
-        # buying-window expiry on active-but-ignored accounts
+        # buying-window expiry on active-but-ignored accounts; with
+        # expire_all every unpursued account past its window expires —
+        # parking a dead account forever stops being free
         expired = (day > self.win_end) & self.active & ~self.pursued \
-            & (self.intent > 0.6)
+            & ((self.intent > 0.6) | self.expire_all)
         for i in np.where(expired)[0]:
             slot = int(self.last_slot[i])
             if slot >= 0:
@@ -301,10 +310,11 @@ class World:
 
             self.spend_today += cost
             self.stats["spent"] += cost
+            self.stats["rent_paid"] += self.rent
             self._add_ledger(
                 slot,
-                ACTION_PENALTY[a] - self.lambda_cost * cost,
-                ACTION_PENALTY[a],
+                ACTION_PENALTY[a] - self.lambda_cost * cost - self.rent,
+                ACTION_PENALTY[a] - self.rent,
             )
 
             if a == WAIT or a == OBSERVE:
@@ -323,6 +333,17 @@ class World:
                 self.stats["enriches"] += 1
             elif a == IGNORE:
                 self.active[i] = False
+                self.stats["ignored"] += 1
+                if self.kill_bonus or self.kill_penalty:
+                    # calibrated write-off: pays most on dead accounts,
+                    # least on hot ones — uses the same hidden quality
+                    # signal as outcome rewards, not observation leakage.
+                    # kill_penalty scales with intent, so at
+                    # penalty == bonus a hot kill costs what a cold
+                    # kill pays.
+                    self._add_ledger(
+                        slot, self.kill_bonus * (1.0 - self.intent[i])
+                        - self.kill_penalty * self.intent[i])
             elif a in (EMAIL, ESCALATE):
                 self._outreach(day, i, slot, escalate=(a == ESCALATE))
         return executed

@@ -26,7 +26,7 @@ from brain.populations import (action_pools, build_channel_map,
                                dan_populations, tracked_set)
 from environment.clay_world import ACTIONS, ACTION_COST
 from learning.encoder import Encoder
-from learning.policy import FlyPolicy
+from learning.policy import FlyPolicy, MLPPolicy, READOUT_ARCH
 from learning.trace import BatchTrace
 from serving.clay_live import DemoBudget, credit_balance, run_routine
 from serving.clay_records import safe_record
@@ -51,7 +51,7 @@ DEFAULT_QUERY = (
 )
 
 
-def neuron_activity_block(brain, spike_counts, per_step):
+def neuron_activity_block(brain, spike_counts, per_step, frames=None):
     window_s = max(1e-6, len(per_step) * float(brain.dt))
     top = []
     for nid, spikes in sorted(spike_counts.items(),
@@ -75,6 +75,7 @@ def neuron_activity_block(brain, spike_counts, per_step):
         "active": len(spike_counts),
         "spikes": int(sum(spike_counts.values())),
         "per_step": [int(c) for c in per_step],
+        "frames": [[int(n) for n in frame] for frame in (frames or [])],
         "hz_max": float(np.ceil(max(rates) / 10.0) * 10.0),
         "top": top,
     }
@@ -90,10 +91,12 @@ class FlyService:
                                 tau=(0.05, 0.15, 0.5))
         self.policies = {}
         self.checkpoints = {}
+        self.rejected = {}
         for filename in ("fly_policy_post.pt", "fly_policy.pt"):
             if self._load_policy(filename, "post"):
                 break
         self._load_policy("fly_policy_pre.pt", "pre")
+        self._load_baseline()
         self.dans = dan_populations(self.brain)
         self.pools = action_pools(self.brain)
         self._tracked_pos = {int(n): i for i, n in enumerate(self.tracked)}
@@ -106,6 +109,49 @@ class FlyService:
             int(ch): [self._tracked_pos[int(n)] for n in ids
                       if int(n) in self._tracked_pos]
             for ch, ids in self.channels.items()
+        }
+
+    def _load_baseline(self):
+        """Parameter-matched dense baseline — same obs input, no brain."""
+        path = ROOT / "results" / "mlp_policy.pt"
+        if not path.exists():
+            return
+        try:
+            checkpoint = torch.load(path, map_location="cpu",
+                                    weights_only=False)
+            state = checkpoint.get("state", checkpoint)
+            hidden = int(state["net.0.weight"].shape[0])
+            mlp = MLPPolicy(16, hidden)
+            mlp.load_state_dict(state, strict=True)
+            mlp.eval()
+            self.policies["mlp"] = mlp
+            self.checkpoints["mlp"] = {
+                "filename": "mlp_policy.pt",
+                "model_version": checkpoint.get(
+                    "model_version", "mlp-baseline"),
+                "sim_steps": int(checkpoint.get("sim_steps") or SIM_STEPS),
+                "n_feat": 12012,
+            }
+        except Exception as exc:
+            self.rejected["mlp"] = {"filename": "mlp_policy.pt",
+                                    "reason": str(exc)}
+
+    def baseline_eval(self, observation):
+        """Score the same observation with the dense baseline readout."""
+        mlp = self.policies.get("mlp")
+        if mlp is None or not observation:
+            return None
+        obs = torch.as_tensor(
+            np.asarray([observation], dtype=np.float32))
+        feat = torch.zeros((1, 12012), dtype=torch.float32)
+        with torch.no_grad():
+            logits, _ = mlp(feat, obs)
+        probs = torch.softmax(logits, 1)[0].numpy()
+        return {
+            "policy_action": ACTIONS[int(probs.argmax())],
+            "confidence": round(float(probs.max()), 4),
+            "probabilities": {a: round(float(p), 4)
+                              for a, p in zip(ACTIONS, probs)},
         }
 
     @property
@@ -125,6 +171,38 @@ class FlyService:
             n_feat = int(weight.shape[1]) if weight is not None else int(
                 checkpoint.get("n_feat", expected))
             if n_feat != expected:
+                # Do not fall through silently. A checkpoint trained against
+                # a different tracked population is incompatible, and quietly
+                # serving a different file instead is how a stale artifact
+                # gets presented as the trained policy.
+                self.rejected[name] = {
+                    "filename": filename,
+                    "reason": "n_feat mismatch",
+                    "checkpoint_n_feat": n_feat,
+                    "expected_n_feat": expected,
+                    "expected_tracked": len(self.tracked),
+                }
+                return False
+            # The readout's semantics have changed twice (linear -> cosine ->
+            # bounded cosine) and weights do not port between them: a linear
+            # readout encoded its logit scale in |W|, which a cosine readout
+            # discards, so the weights would load and produce arbitrary
+            # decisions. Compare the declared architecture rather than
+            # guessing from which keys happen to be present.
+            if checkpoint.get("readout_arch") != READOUT_ARCH:
+                declared = checkpoint.get("readout_arch")
+                if declared is None:
+                    # Older checkpoints predate the stamp. Distinguish the
+                    # two by whether they carry the temperature parameter.
+                    declared = ("cosine-v1" if "temperature" in state
+                                else "linear (pre-cosine)")
+                self.rejected[name] = {
+                    "filename": filename,
+                    "reason": "readout architecture mismatch: checkpoint is "
+                              f"{declared} but this build serves "
+                              f"{READOUT_ARCH}; retrain",
+                    "checkpoint_n_feat": n_feat,
+                }
                 return False
             policy = FlyPolicy(
                 n_feat,
@@ -133,17 +211,32 @@ class FlyService:
             policy.load_state_dict(state, strict=True)
             policy.eval()
             self.policies[name] = policy
+            gains = checkpoint.get("encoder_gains")
+            if gains is not None and len(gains) != 16:
+                gains = None
             self.checkpoints[name] = {
                 "filename": filename,
                 "model_version": checkpoint.get("model_version", filename),
                 "w_sha256": checkpoint.get("w_sha256"),
                 "checkpoint_sha256": checkpoint.get("checkpoint_sha256"),
-                "sim_steps": checkpoint.get("sim_steps", SIM_STEPS),
+                "sim_steps": int(checkpoint.get("sim_steps") or SIM_STEPS),
                 "seed": checkpoint.get("seed"),
                 "use_raw_head": checkpoint.get("use_raw_head", True),
+                "encoder_gains": [float(g) for g in gains] if gains else None,
+                "n_feat": n_feat,
+                "tracked": len(self.tracked),
             }
+            # The sensory interface is part of the checkpoint. Loading the
+            # readout without its gains silently changes what the fly sees,
+            # which is how a trained policy turns into a constant.
+            if name == "post" and gains is not None:
+                self.encoder.gains = np.asarray(gains, np.float32)
             return True
-        except (OSError, RuntimeError, ValueError, KeyError):
+        except Exception as exc:
+            # A corrupt checkpoint (EOFError, BadZipFile, UnpicklingError...)
+            # is a rejected policy, not a server crash.
+            self.rejected[name] = {"filename": filename,
+                                   "reason": f"{type(exc).__name__}: {exc}"}
             return False
 
     def reset_session(self):
@@ -157,10 +250,15 @@ class FlyService:
 
     def decide(self, signals, prices=None, budget=100.0, researched=0.0,
                enriched=0.0, policy="post", *, reset=True, mode="replay",
-               provenance=None):
+               provenance=None, pain=None):
         policy_model = self.policies.get(policy, self.policies.get("post"))
         if policy_model is None:
             raise RuntimeError("no compatible trained policy checkpoint found")
+        # The horizon is a property of the checkpoint, not of the server.
+        # Serving a 12-step readout at 4 steps (or the reverse) puts the
+        # policy off the feature distribution it was trained on.
+        meta = self.checkpoints.get(policy) or self.checkpoints.get("post") or {}
+        sim_steps = int(meta.get("sim_steps") or SIM_STEPS)
         if reset:
             self.reset_session()
 
@@ -179,16 +277,19 @@ class FlyService:
                     costs[idx] = max(0.0, float(value))
         obs[0, 10:14] = np.clip(costs[[2, 3, 4, 5]] / BASE_COSTS, 0, 2)
         obs[0, 14] = np.clip(budget / 100.0, 0, 2)
-        obs[0, 15] = 0.5
+        obs[0, 15] = 0.5 if pain is None else np.clip(float(pain), 0, 1)
 
         spike_counts = {}
         per_step = []
-        for _ in range(SIM_STEPS):
+        frames = []
+        for _ in range(sim_steps):
             self.brain.step(inject=self.encoder.inject(obs, np.array([0]), 1))
             fired = np.asarray(self.brain.fired).reshape(-1)
             fired = fired[fired < self.brain.n]
-            per_step.append(int(fired.size))
-            for nid in np.unique(fired):
+            unique = np.unique(fired)
+            per_step.append(int(unique.size))
+            frames.append([int(n) for n in unique])
+            for nid in unique:
                 key = int(nid)
                 spike_counts[key] = spike_counts.get(key, 0) + 1
             self.trace.observe(self.brain)
@@ -219,12 +320,12 @@ class FlyService:
                 self.trace.trace[..., 0].reshape(-1), 4).tolist(),
             "observation": np.round(obs[0], 4).tolist(),
             "neuron_activity": neuron_activity_block(
-                self.brain, spike_counts, per_step),
+                self.brain, spike_counts, per_step, frames),
             "neuron_count": self.brain.n,
             "connectome": "MaleCNS v1.0",
             "model_version": self.model_version,
             "mode": mode,
-            "sim_steps": SIM_STEPS,
+            "sim_steps": sim_steps,
             "provenance": provenance or [],
         }
 
@@ -364,12 +465,20 @@ class FlyService:
         }
 
     def health(self):
+        served = self.checkpoints.get("post") or {}
         return {
             "ok": bool(self.policies),
             "mode": "replay/live_draft",
             "policy_loaded": sorted(self.policies),
             "model_version": self.model_version,
-            "sim_steps": SIM_STEPS,
+            # Report what is actually being served, not what the server
+            # would default to. These two drifting apart is the bug.
+            "sim_steps": int(served.get("sim_steps") or SIM_STEPS),
+            "encoder_gains": served.get("encoder_gains"),
+            "use_raw_head": served.get("use_raw_head"),
+            "tracked": served.get("tracked"),
+            "n_feat": served.get("n_feat"),
+            "rejected_checkpoints": self.rejected,
             "connectome_sha256": weights_checksum(brain=self.brain),
             "checkpoints": self.checkpoints,
             "safe_to_contact": False,
@@ -380,13 +489,14 @@ class FlyService:
             "model_version": self.model_version,
             "connectome_sha256": weights_checksum(brain=self.brain),
             "checkpoints": self.checkpoints,
+            "rejected_checkpoints": self.rejected,
             "experiment": "legacy-compatible serving until a corrected bundle is installed",
             "claims": "real Clay mode is orchestration evidence, not revenue evidence",
         }
 
 
 def resolve_static_asset(path: str) -> Path | None:
-    if not path.startswith("/") or not path.endswith(".png"):
+    if not path.startswith("/") or Path(path).suffix not in {".png", ".js"}:
         return None
     name = path[1:]
     if name.startswith("demo/"):
@@ -403,7 +513,7 @@ class Handler(BaseHTTPRequestHandler):
     def _allowed_origin(self):
         allowed = {x.strip() for x in os.environ.get(
             "FLY_ALLOWED_ORIGINS",
-            "http://127.0.0.1:8090,http://localhost:8090",
+            "http://127.0.0.1:8090,http://localhost:8090,null",
         ).split(",") if x.strip()}
         origin = self.headers.get("Origin")
         return origin if origin in allowed else next(iter(allowed), "")
@@ -440,6 +550,12 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(200, self.service.health())
             elif path == "/api/artifacts/current":
                 self.send_json(200, self.service.artifacts())
+            elif path == "/api/demo/eval":
+                summary_path = ROOT / "results" / "eval_summary.json"
+                if not summary_path.exists():
+                    self.send_json(404, {"error": "eval not run yet"})
+                else:
+                    self.send_json(200, json.loads(summary_path.read_text()))
             elif path == "/live":
                 qs = parse_qs(urlsplit(self.path).query)
                 query = qs.get("query", [DEFAULT_QUERY])[0]
@@ -448,7 +564,9 @@ class Handler(BaseHTTPRequestHandler):
             elif (asset := resolve_static_asset(path)) is not None:
                 body = asset.read_bytes()
                 self.send_response(200)
-                self.send_header("Content-Type", "image/png")
+                content_type = ("application/javascript; charset=utf-8"
+                                if asset.suffix == ".js" else "image/png")
+                self.send_header("Content-Type", content_type)
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
                 self.wfile.write(body)
@@ -477,10 +595,44 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("request body too large")
             req = json.loads(self.rfile.read(size) or b"{}")
             if path == "/api/demo/think":
-                from serving.think import build_think_response, clamp_energies
-                signals = clamp_energies(req.get("signals", {}))
-                out = self.service.decide(signals)
-                self.send_json(200, build_think_response(signals, out))
+                from serving.think import (build_think_response,
+                                           clamp_energies, recommend)
+                ctx = req.get("context") or {}
+                if "evidence" in req:
+                    from serving.evidence import adapt_evidence_to_signals
+                    adapted = adapt_evidence_to_signals(req["evidence"])
+                    signals = clamp_energies(adapted["signals"])
+                    out = self.service.decide(
+                        signals, provenance=adapted["provenance"],
+                        researched=float(ctx.get("researched", 0)),
+                        enriched=float(ctx.get("enriched", 0)),
+                        budget=float(ctx.get("budget", 100)),
+                        pain=ctx.get("pain"))
+                    out["sources"] = adapted["sources"]
+                    out["excluded"] = adapted["excluded"]
+                else:
+                    signals = clamp_energies(req.get("signals", {}))
+                    out = self.service.decide(
+                        signals,
+                        researched=float(ctx.get("researched", 0)),
+                        enriched=float(ctx.get("enriched", 0)),
+                        budget=float(ctx.get("budget", 100)),
+                        pain=ctx.get("pain"))
+                resp = build_think_response(signals, out)
+                baseline = self.service.baseline_eval(
+                    out.get("observation"))
+                if baseline:
+                    resp["baseline"] = baseline
+                    resp["baseline_recommendation"], _ = recommend(
+                        baseline["policy_action"], 0)
+                from serving.judge import judge_decision
+                judge = judge_decision(
+                    signals, ctx, evidence=req.get("evidence"))
+                if judge:
+                    resp["judge"] = judge
+                    resp["judge_recommendation"], _ = recommend(
+                        judge["policy_action"], 0)
+                self.send_json(200, resp)
                 return
             if path == "/api/demo/run":
                 mode = req.get("mode", "replay")

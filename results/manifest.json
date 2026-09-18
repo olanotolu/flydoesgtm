@@ -1,28 +1,36 @@
 {
-  "checkpoint": "results/fly_policy.pt",
+  "checkpoint": "/data/results/fly_policy.pt",
   "connectome_sha256": "809ef60873eba5df0869eeb692e0154f41a42b2d731bb0603c516e2630ae6020",
   "curriculum": [
     {
-      "allowed": "{0, 1, 2, 4}",
-      "days": 15,
-      "episodes": 6,
+      "allowed": "{0, 1, 2, 4, 6}",
+      "days": 30,
+      "episodes": 20,
       "lam": 0.25,
-      "n": 24,
-      "name": "smoke 24acc/15d/4act"
+      "n": 100,
+      "name": "stage1 100acc/30d/5act"
     },
     {
       "allowed": "{0, 1, 2, 3, 4, 5, 6}",
-      "days": 20,
-      "episodes": 4,
+      "days": 35,
+      "episodes": 20,
       "lam": 0.25,
-      "n": 48,
-      "name": "smoke 48acc/20d/7act"
+      "n": 128,
+      "name": "stage2 128acc/35d/7act"
+    },
+    {
+      "allowed": "{0, 1, 2, 3, 4, 5, 6}",
+      "days": 45,
+      "episodes": 20,
+      "lam": 0.25,
+      "n": 160,
+      "name": "stage3 160acc/45d/7act"
     }
   ],
-  "git_commit": "d02b5f73fb9903ff43dcaa384e3247ef574dbfa7",
-  "model_version": "fly-d02b5f73fb9903ff43dcaa384e3247ef574dbfa7-10000",
+  "git_commit": "11c5806a7217e79b864f53de0b0e86b1bae17c57-dirty",
+  "model_version": "fly-11c5806a7217e79b864f53de0b0e86b1bae17c57-dirty-10000",
   "seed": 10000,
-  "sim_steps": 4,
-  "state_sha256": "c13d702de418c82ec5bd5b8bc569c8fc29c5203a1275fc1bc27171e72a9dee4b",
-  "trainable_params": 84206
+  "sim_steps": 12,
+  "state_sha256": "763b9556d975cbb3e6a9707f056a8a32413bfc158afd9f0de580a88f6b0b98e0",
+  "trainable_params": 84201
 }

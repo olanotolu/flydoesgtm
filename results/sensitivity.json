@@ -1,0 +1,42 @@
+{
+ "chance": 0.25,
+ "min_probe": 0.6,
+ "n_per_level": 16,
+ "sigma": 0.08,
+ "splits": 100,
+ "seed": 1234,
+ "results": [
+  {
+   "gain": 0.6,
+   "steps": 4,
+   "ms": 80.0,
+   "probe_accuracy": 0.45307692307692304,
+   "probe_std": 0.09191905366155323,
+   "occupancy": 0.034215784215784216
+  },
+  {
+   "gain": 0.6,
+   "steps": 12,
+   "ms": 240.0,
+   "probe_accuracy": 0.5738461538461538,
+   "probe_std": 0.07838608740219691,
+   "occupancy": 0.7117882117882118
+  },
+  {
+   "gain": 1.0,
+   "steps": 4,
+   "ms": 80.0,
+   "probe_accuracy": 0.6461538461538461,
+   "probe_std": 0.1499506822278302,
+   "occupancy": 0.047702297702297704
+  },
+  {
+   "gain": 1.0,
+   "steps": 12,
+   "ms": 240.0,
+   "probe_accuracy": 0.7546153846153847,
+   "probe_std": 0.09146732853510653,
+   "occupancy": 0.7412587412587412
+  }
+ ]
+}

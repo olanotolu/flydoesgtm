@@ -25,3 +25,10 @@ results/*.npz
 clay entropy/clay_entropy.sqlite3
 clay entropy/exports/
 .vercel
+remote_results*
+remote_sweeps*
+ClayRelic/
+.opencode/
+.workbuddy-ai/
+.wrangler/
+docs/superpowers/

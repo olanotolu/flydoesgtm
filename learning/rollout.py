@@ -22,9 +22,14 @@ def as_torch(value, device):
         return torch.utils.dlpack.from_dlpack(value).to(device)
     return torch.as_tensor(value, device=device)
 
-SIM_STEPS = int(__import__("os").environ.get("FLY_SIM_STEPS", "4"))
-# 4 steps keeps training economical; the demo sets FLY_SIM_STEPS=10 for
-# a richer visible propagation trace (4 x 20ms is still 80ms of fly time).
+SIM_STEPS = int(__import__("os").environ.get("FLY_SIM_STEPS", "12"))
+# 12 steps (12 x 20ms = 240ms) is the shortest horizon at which injected
+# current reliably reaches the descending/ascending/Kenyon populations the
+# readout watches. At 4 steps only ~3.4% of trace features ever fire and a
+# linear probe cannot separate account qualities (52.8%, chance 25%); at 12
+# steps 76% of features fire and the probe reaches 85.7%. Train and serve
+# at the same value — the server reads this horizon back out of the
+# checkpoint, so changing it here alone will not silently desync the demo.
 N_ACTIONS = 7
 
 
@@ -121,10 +126,11 @@ def run_episode(brain, trace, enc, policy, world, allowed, device,
 
 
 def evaluate(brain, trace, enc, policy, device, seed=777, n=500,
-             days=60):
+             days=60, world_kwargs=None):
     """Greedy episode on a held-out world scored on the pure-economics
     ledger — checkpoint selection, same discipline as the worm."""
-    world = World(n_accounts=n, days=days, daily_budget=100.0, seed=seed)
+    world = World(n_accounts=n, days=days, daily_budget=100.0, seed=seed,
+                  **(world_kwargs or {}))
     run_episode(brain, trace, enc, policy, world, set(range(7)),
                 device, train=False, greedy=True)
     return sum(world.econ.values()), dict(world.stats)

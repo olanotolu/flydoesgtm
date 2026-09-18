@@ -10,14 +10,46 @@ def test_crowdedness_counts_hot_channels():
     assert crowdedness_of(energies) == 4
 
 
-def test_wait_triggers_on_engage_and_crowded():
-    assert recommend("RESEARCH", 4) == ("WAIT", 14)
-    assert recommend("DRAFT_EMAIL", 5) == ("WAIT", 21)
+def test_every_fly_action_maps_to_a_verdict():
+    """The fly owns the verdict. A missing action here means the demo
+    silently reports one of the fly's decisions as something else."""
+    from environment.clay_world import ACTIONS
+
+    engage = {"RESEARCH", "ENRICH", "EMAIL", "ESCALATE"}
+    abstain = {"WAIT", "OBSERVE"}
+    for action in ACTIONS:
+        verdict, _ = recommend(action, 0)
+        if action in engage:
+            assert verdict == "YES", action
+        elif action in abstain:
+            assert verdict == "WAIT", action
+        else:
+            assert verdict == "NO", action
+
+
+def test_engage_actions_are_yes():
+    for action in ("RESEARCH", "ENRICH", "EMAIL", "DRAFT_EMAIL", "ESCALATE"):
+        assert recommend(action, 0) == ("YES", 0)
+
+
+def test_abstentions_are_wait_not_no():
+    """WAIT/OBSERVE used to fall through to NO, reporting an abstention
+    as a rejection."""
+    assert recommend("WAIT", 0) == ("WAIT", 7)
+    assert recommend("OBSERVE", 0) == ("WAIT", 7)
+    assert recommend("WAIT", 6)[0] != "NO"
 
 
 def test_ignore_never_waits():
     assert recommend("IGNORE", 6) == ("NO", 0)
     assert recommend("IGNORE", 0) == ("NO", 0)
+
+
+def test_crowdedness_no_longer_changes_the_verdict():
+    """The evidence adapter pins four channels at 0.5, so crowdedness
+    cannot reach the old `>= 4` threshold — that branch was dead code."""
+    for action in ("RESEARCH", "WAIT", "IGNORE"):
+        assert recommend(action, 0) == recommend(action, 6)
 
 
 def test_yes_when_engage_and_calm():
@@ -32,7 +64,8 @@ def test_reasons_name_top_channels():
     lines = build_reasons(energies, decide_out, 3, 0)
     assert lines[0] == "Detected Funding signal at 90%"
     assert lines[1] == "Detected Intent signal at 80%"
-    assert any("Deep channels responding: 14 · 7" in line for line in lines)
+    assert any("Deep channels responding: budget_level · day_frac" in line
+               for line in lines)
     assert any("Information value: HIGH" in line for line in lines)
 
 
@@ -48,9 +81,8 @@ def test_think_response_is_json_serializable():
     assert '"recommendation": "YES"' in body
 
 
-def test_think_integration_real_brain():
-    from serving.serve import FlyService
-    svc = FlyService()
+def test_think_integration_real_brain(fly_service):
+    svc = fly_service
     out = svc.decide({"funding": 0.9, "hiring": 0.55, "intent": 0.8,
                       "job_change": 0.5, "negative": 0.1, "trigger": 0.75})
     body = build_think_response(

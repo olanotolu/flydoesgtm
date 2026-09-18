@@ -9,7 +9,6 @@ def test_wait_wins_when_no_commitment():
     p = FlyPolicy(100)
     with torch.no_grad():
         p.readout.weight.zero_()
-        p.readout.bias.zero_()
         p.action_bias.zero_()
     feat = torch.zeros(3, 100)
     obs = torch.zeros(3, 16)
@@ -23,7 +22,7 @@ def test_margins_discount_expensive_actions():
     p = FlyPolicy(50)
     with torch.no_grad():
         p.margins.fill_(1.0)     # strong price sensitivity
-        p.readout.weight.zero_(); p.readout.bias.zero_()
+        p.readout.weight.zero_()
         p.action_bias.zero_()
     feat = torch.ones(2, 50)
     cheap = torch.zeros(2, 16)

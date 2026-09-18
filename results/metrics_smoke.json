@@ -1,0 +1,35 @@
+[
+ {
+  "ep": 5,
+  "stage": 0,
+  "reward": 139.13975524902344,
+  "spent": 31.250804901123047,
+  "val": 0.0,
+  "meetings": 1,
+  "closed": 1,
+  "spam": 0,
+  "replies": 2
+ },
+ {
+  "ep": 6,
+  "stage": 0,
+  "reward": 107.44532775878906,
+  "spent": 159.04515075683594,
+  "val": 0.0,
+  "meetings": 1,
+  "closed": 1,
+  "spam": 0,
+  "replies": 4
+ },
+ {
+  "ep": 10,
+  "stage": 1,
+  "reward": 23.69889259338379,
+  "spent": 31.32538414001465,
+  "val": 0.0,
+  "meetings": 0,
+  "closed": 0,
+  "spam": 0,
+  "replies": 1
+ }
+]

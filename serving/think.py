@@ -3,12 +3,15 @@ from __future__ import annotations
 
 from typing import Any
 
+from environment.signals import CHANNEL_NAMES
+
 SIGNAL_ORDER = ("funding", "hiring", "intent", "job_change",
                 "negative", "trigger")
 LABELS = {"funding": "Funding", "hiring": "Hiring", "intent": "Intent",
           "job_change": "Job change", "negative": "Negative",
           "trigger": "Trigger"}
-ENGAGE = ("RESEARCH", "DRAFT_EMAIL", "ESCALATE")
+ENGAGE = ("RESEARCH", "ENRICH", "EMAIL", "DRAFT_EMAIL", "ESCALATE")
+ABSTAIN = ("WAIT", "OBSERVE")
 
 
 def clamp_energies(raw: dict) -> dict[str, float]:
@@ -17,14 +20,40 @@ def clamp_energies(raw: dict) -> dict[str, float]:
 
 
 def crowdedness_of(energies: dict) -> int:
+    """How many channels the evidence pushed above neutral.
+
+    Reported for context only. This used to gate the verdict, but
+    `serving/evidence.py` pins funding, hiring, job_change and negative at
+    a neutral 0.5, so crowdedness cannot exceed 2 and the old `>= 4`
+    branch was unreachable. See `recommend`.
+    """
     return sum(1 for key in SIGNAL_ORDER if energies.get(key, 0.0) > 0.6)
 
 
 def recommend(decision: str, crowdedness: int) -> tuple[str, int]:
-    if decision in ENGAGE and crowdedness >= 4:
-        return "WAIT", 7 * (crowdedness - 2)
+    """Map the fly's action onto the demo's three verdicts.
+
+    The fly owns the verdict. Two bugs lived here:
+
+    1. `ENGAGE` omitted ENRICH and EMAIL, so a fly that decided to email
+       the account was reported to the user as NO.
+    2. The fly's own WAIT and OBSERVE also fell through to NO, so an
+       abstention was reported as a rejection — while the only path to
+       WAIT was a crowdedness threshold the evidence adapter cannot reach.
+
+    Every action the policy can emit now maps somewhere deliberate:
+
+        RESEARCH ENRICH EMAIL DRAFT_EMAIL ESCALATE -> YES  (pursue)
+        WAIT OBSERVE                               -> WAIT (not yet)
+        IGNORE                                     -> NO   (write off)
+
+    `crowdedness` is kept for signature compatibility and no longer
+    changes the verdict.
+    """
     if decision in ENGAGE:
         return "YES", 0
+    if decision in ABSTAIN:
+        return "WAIT", 7
     return "NO", 0
 
 
@@ -62,7 +91,7 @@ def build_reasons(energies: dict, decide_out: dict, crowdedness: int,
     deep = _deep_channels(decide_out)
     if deep:
         lines.append("Deep channels responding: " +
-                     " · ".join(str(key) for key in deep))
+                     " · ".join(CHANNEL_NAMES[key] for key in deep))
     confidence = float(decide_out.get("confidence", 0.5))
     value = ("HIGH" if confidence >= 0.75 else
              "MEDIUM" if confidence >= 0.5 else "LOW")
@@ -99,4 +128,9 @@ def build_think_response(signals: dict, decide_out: dict) -> dict:
         "sim_steps": int(decide_out.get("sim_steps", 0)),
         "neuron_activity": decide_out.get("neuron_activity") or {},
         "sees": sees,
+        "provenance": _jsonable(decide_out.get("provenance") or []),
+        "sources": _jsonable(decide_out.get("sources") or []),
+        "excluded": _jsonable(decide_out.get("excluded") or []),
+        "connectome": decide_out.get("connectome"),
+        "model_version": decide_out.get("model_version"),
     }

@@ -72,13 +72,23 @@ def test_resolve_static_asset_finds_demo_png():
     assert resolve_static_asset("/demo/sub/x.png") is None
 
 
-def test_decide_reports_real_neuron_activity():
-    from serving.serve import FlyService
-    svc = FlyService()
+def test_resolve_static_asset_finds_connectome_javascript():
+    from serving.serve import resolve_static_asset
+    found = resolve_static_asset("/malecns-soma-sample.js")
+    assert found is not None and found.name == "malecns-soma-sample.js"
+
+
+def test_decide_reports_real_neuron_activity(fly_service):
+    svc = fly_service
     out = svc.decide({"funding": 0.97, "trigger": 0.92, "intent": 0.88,
                       "hiring": 0.55, "job_change": 0.18, "negative": 0.04})
     na = out["neuron_activity"]
-    assert na["steps"] == 4 and na["dt_ms"] == 20 and na["window_ms"] == 80
+    # Assert the reported window is self-consistent and matches what the
+    # service says it served, rather than pinning a literal that goes stale
+    # every time the horizon changes.
+    served = svc.health()["sim_steps"]
+    assert na["steps"] == served
+    assert na["dt_ms"] == 20 and na["window_ms"] == 20 * served
     assert na["active"] >= 1 and na["spikes"] >= na["active"]
     assert sum(na["per_step"]) == na["spikes"]
     assert na["hz_max"] > 0
@@ -86,3 +96,6 @@ def test_decide_reports_real_neuron_activity():
     assert isinstance(first["id"], int) and first["label"]
     assert first["spikes"] >= na["top"][-1]["spikes"]
     assert len(out["observation"]) == 16
+    assert len(na["frames"]) == na["steps"]
+    assert [len(f) for f in na["frames"]] == na["per_step"]
+    assert all(isinstance(n, int) for frame in na["frames"] for n in frame)
