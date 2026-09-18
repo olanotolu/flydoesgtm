@@ -470,6 +470,8 @@
     .vision-strip span { height: 9px; border-radius: 2px; background: #e6e9e4; }
     .vision-strip span.is-lit { background: #91b659; box-shadow: 0 0 8px rgba(145,182,89,.36); }
     #brain-map { display: block; width: 100%; height: 230px; border-radius: 18px; background: radial-gradient(ellipse at 50% 54%, rgba(232,245,237,.9), rgba(255,253,249,0) 68%); }
+    .flybody-panel { grid-column: 1 / -1; min-height: 0; }
+    #fly-body { display: block; width: 100%; height: 190px; border-radius: 18px; background: radial-gradient(ellipse at 50% 58%, rgba(240,233,220,.8), rgba(255,253,249,0) 70%); }
     .activity-legend { display: flex; align-items: center; gap: 8px; margin: 2px 0 12px; color: #827b72; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; }
     .activity-legend i { flex: 1; height: 6px; border-radius: 999px; background: linear-gradient(90deg, #eef1e8, #91b659); }
     .activity-scrub-row { display: flex; align-items: center; gap: 10px; }
@@ -607,6 +609,12 @@
           <div class="activity-meter"><div class="meter-labels"><span>0 confidence</span><span>1.0 confidence</span></div><div class="meter-track"><div class="meter-fill" id="meter-fill"></div></div></div>
           <div class="data-provenance"><span>Anatomy <strong>MaleCNS v1.0 · 24,000 / 166,700 somata</strong></span><span>Source <strong id="proof-source">Janelia / Google · CC-BY 4.0</strong></span><span>Overlay <strong>engineered GTM stimulation · not biological recording</strong></span><span>Model <strong id="proof-model">fly-demo-evidence-v1</strong></span><span>Mode <strong>sourced demo · no send</strong></span></div>
         </aside>
+        <aside class="evidence-panel flybody-panel">
+          <h3>The rest of the animal</h3>
+          <p class="evidence-sub">14,880 real surface samples · anatomically detailed Drosophila body model</p>
+          <canvas id="fly-body" height="190" aria-label="Rotating fruit fly body model"></canvas>
+          <div class="data-provenance"><span>Body <strong>flybody · DeepMind × HHMI Janelia</strong></span><span>Source <strong>TuragaLab/flybody · Apache-2.0</strong></span><span>Render <strong>surface point sample · no physics</strong></span></div>
+        </aside>
         <div class="decision-proof"><span class="evidence-verdict" id="evidence-verdict">awaiting run</span><span class="decision-chip" id="decision-chip">Ready to run</span><span id="decision-copy">External facts are sourced; the GTM score and draft are demo-derived. Nothing is sent.</span></div>
         <div class="eval-strip" id="eval-strip" hidden></div>
       </section>
@@ -695,6 +703,7 @@
   </defs>
 </svg>
   <script src="../malecns-soma-sample.js"></script>
+  <script src="../flybody-sample.js"></script>
   <script>
     const $ = (selector) => document.querySelector(selector);
     const SIGNAL_KEYS = ['funding', 'hiring', 'intent', 'job_change', 'negative', 'trigger'];
@@ -963,6 +972,42 @@
       canvas.dataset.lit = String(litSet.size);
       canvas.dataset.anatomy = 'MaleCNS v1.0';
     }
+    const FLY_PART_COLOR = {
+      body: '110,94,75', head: '74,63,51', leg: '58,48,38',
+      wing: '148,160,150'};
+    const FLY_CENTER = {x: .013, z: -.05};  // mesh bbox midpoint, for framing
+    function drawFlyBody() {
+      const canvas = document.querySelector('#fly-body');
+      if (!canvas) return;
+      const ratio = Math.min(2, window.devicePixelRatio || 1);
+      const width = canvas.clientWidth || 600, height = canvas.clientHeight || 190;
+      if (canvas.width !== width * ratio || canvas.height !== height * ratio) { canvas.width = width * ratio; canvas.height = height * ratio; }
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+      const data = window.FLY_BODY_SAMPLE;
+      if (!data) {
+        ctx.fillStyle = '#8b857c'; ctx.font = '600 10px ui-monospace, SFMono-Regular, Menlo, monospace'; ctx.textAlign = 'center';
+        ctx.fillText('body sample unavailable', width / 2, height / 2);
+        return;
+      }
+      state._ft = (state._ft || 0) + 0.0038;
+      const yaw = state._ft, pitch = -0.28;
+      const cyw = Math.cos(yaw), syw = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+      const scale = Math.min(width * .38, height * 2.4);
+      const ox = width / 2, oy = height * .54, focal = 3.1;
+      const pts = data.points, part = data.part, names = data.kinds;
+      for (let i = 0; i < part.length; i++) {
+        const j = i * 3;
+        const x0 = pts[j] - FLY_CENTER.x, y0 = pts[j + 1], z0 = pts[j + 2] - FLY_CENTER.z;
+        const x1 = x0 * cyw + y0 * syw, z1 = -x0 * syw + y0 * cyw;
+        const y1 = z0 * cp - z1 * sp, z2 = z0 * sp + z1 * cp;
+        const pr = focal / (focal + z2);
+        const x = ox + x1 * scale * pr, y = oy - y1 * scale * pr;
+        ctx.fillStyle = `rgba(${FLY_PART_COLOR[names[part[i]]] || '110,94,75'},${(.10 + pr * .20).toFixed(3)})`;
+        ctx.fillRect(x, y, pr * 1.7, pr * 1.7);
+      }
+    }
     let activitySteps = [];
     let activityFrames = [];
     let operatorChoice = null;
@@ -1197,7 +1242,7 @@
     requestAnimationFrame(() => paintActivityStep(0));
     window.addEventListener('resize', () => drawBrainMap());
     const brainMotionReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const animateBrain = () => { drawBrainMap(); if (!brainMotionReduced) requestAnimationFrame(animateBrain); };
+    const animateBrain = () => { drawBrainMap(); drawFlyBody(); if (!brainMotionReduced) requestAnimationFrame(animateBrain); };
     requestAnimationFrame(animateBrain);
   </script>
   <script>
