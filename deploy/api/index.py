@@ -32,20 +32,16 @@ DEFAULT_QUERY = ('select from people where location_country = "United States" '
 
 
 def graph_payload():
-    """Small deterministic visual sample for the hosted replay function."""
-    points = []
-    for i in range(2200):
-        a = i * 2.399963
-        shell = 0.18 + ((i * 37) % 1000) / 1250
-        points.append([round(shell * __import__('math').cos(a), 4),
-                       round(shell * .72 * __import__('math').sin(a * .83), 4),
-                       round(shell * __import__('math').sin(a), 4)])
-    channels = {str(i): list(range(i * 300, min((i + 1) * 300, len(points)))) for i in range(6)}
-    return {"n": 166700, "points": points, "point_indices": list(range(len(points))),
-            "groups": {}, "pools": {"RESEARCH": list(range(900, 1300)),
-                                      "DRAFT_EMAIL": list(range(1300, 1700)),
-                                      "ESCALATE": list(range(1700, 2000))},
-            "channels": channels, "signal_keys": ["funding", "hiring", "intent", "job_change", "negative", "trigger"]}
+    """Real MaleCNS soma sample — the same 24k coordinates the page loads."""
+    raw = (DEMO / "malecns-soma-sample.js").read_text()
+    sample = json.loads(raw.split("=", 1)[1].rstrip().rstrip(";"))
+    return {"n": sample["total_neurons"], "source": sample["source"],
+            "license": sample["license"],
+            "points": sample["points"],
+            "point_indices": sample["point_indices"],
+            "groups": {}, "pools": {}, "channels": {},
+            "signal_keys": ["funding", "hiring", "intent", "job_change",
+                            "negative", "trigger"]}
 
 
 def clay_live(query, limit):
