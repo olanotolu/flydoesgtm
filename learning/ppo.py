@@ -21,10 +21,10 @@ VALUE_COEF = 0.5
 # ordinary PPO hygiene, not as the fix.
 GRAD_CLIP = 1.0
 # Weight on the teacher cross-entropy anchor inside the PPO loss. The
-# teacher (environment/teacher.py) never emits IGNORE, so while this
-# term is nonzero the policy is anchored away from IGNORE no matter
-# what the economics say. `learning.train` can decay it per-episode;
-# `ppo_update` keeps it constant by default.
+# teacher (environment/teacher.py) emits IGNORE only on corroborated
+# dead accounts, so the anchor now teaches the write-off boundary
+# instead of pinning the IGNORE logit at ~0. `learning.train` can decay
+# it per-episode; `ppo_update` keeps it constant by default.
 IMITATION_COEF = 0.2
 
 

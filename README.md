@@ -131,10 +131,22 @@ Un-anchoring is necessary but not sufficient: the `nok` arm decayed the
 imitation coefficient to zero across training (`--imitation-final`), which
 freed real GTM skill — mean return 32 → 1082, emails 26 → 123 — yet IGNORE
 still never argmaxed (p ≈ 2e-4, zero ignores in 24 eval rows). The dead
-action is an exploration dead-end baked ~8.5 logits into the readout by the
-IGNORE-less teacher warm-start; at ~1/10k sampling, PPO cannot lift it. The
-fix is teacher-side: restoring a calibrated IGNORE rule so imitation teaches
-the action rather than fighting it (`results/eval_nok_rows.json`).
+action was an exploration dead-end baked ~8.5 logits into the readout by the
+IGNORE-less teacher warm-start; at ~1/10k sampling, PPO cannot lift it
+(`results/eval_nok_rows.json`).
+
+The `tign` arm restores a calibrated IGNORE rule to the teacher
+(`environment/teacher.py` — a four-channel deadness quorum plus a
+weak-fit-confirmed or late-episode qualifier, firing ~1% of teacher rows).
+That unburies the logit: warm-start p(IGNORE) rises ~7×, post-PPO probes
+show p(IGNORE) 0.023–0.061 scaling monotonically with account deadness, and
+the policy samples IGNORE 21–101×/episode in training. Eval return improves
+to +1589 (nok: +1082). But argmax still never lands on IGNORE — the blocker
+moved from reachability to rate: the constant 0.2 anchor pins the action's
+mass near the teacher's ~2% fire rate. The fly instead emits its "no"
+expensively — emailing dead accounts until unsubscribe/spam-burn
+deactivates them (~36 unsubs, ~17 spam/ep) rather than taking the clean
++2.4 kill (`results/eval_tign_rows.json`).
 
 The no-brain ablation (`experiments/no_brain_ablation.py`, same checkpoint,
 inference-time `feat=0` vs intact vs permuted) isolates the connectome's

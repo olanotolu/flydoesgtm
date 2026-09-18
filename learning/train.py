@@ -66,10 +66,11 @@ def run(curriculum, brain_device="cpu", torch_device=None,
 
     `imitation_final` decays the teacher cross-entropy anchor linearly
     from IMITATION_COEF to that value across all curriculum episodes
-    (episode index / total episodes). The teacher never emits IGNORE, so
-    the constant anchor pins IGNORE's probability at ~0 forever; decaying
-    it to 0.0 lets the v2 economy's kill_bonus teach the write-off.
-    None keeps the historical constant coefficient.
+    (episode index / total episodes). With the teacher's calibrated
+    IGNORE branch restored, the constant anchor now reinforces the
+    write-off boundary instead of suppressing it; decaying it to 0.0
+    leaves IGNORE purely to the v2 economy's kill_bonus. None keeps the
+    historical constant coefficient.
     """
     import json
     from pathlib import Path
