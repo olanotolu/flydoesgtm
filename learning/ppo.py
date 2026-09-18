@@ -20,6 +20,12 @@ VALUE_COEF = 0.5
 # genuinely bounded, could never fire again. Gradient clipping is kept as
 # ordinary PPO hygiene, not as the fix.
 GRAD_CLIP = 1.0
+# Weight on the teacher cross-entropy anchor inside the PPO loss. The
+# teacher (environment/teacher.py) never emits IGNORE, so while this
+# term is nonzero the policy is anchored away from IGNORE no matter
+# what the economics say. `learning.train` can decay it per-episode;
+# `ppo_update` keeps it constant by default.
+IMITATION_COEF = 0.2
 
 
 def generalized_advantage(rewards, values, dones, gamma=0.99, lam=0.95):
@@ -36,7 +42,7 @@ def generalized_advantage(rewards, values, dones, gamma=0.99, lam=0.95):
     return adv, adv + values
 
 
-def ppo_update(policy, opt, traj):
+def ppo_update(policy, opt, traj, imitation_coef=IMITATION_COEF):
     feat, obs, act = traj["feat"], traj["obs"], traj["act"]
     logp_old, ret, val_old = traj["logp"], traj["ret"], traj["val"]
     action_mask = traj.get("action_mask")
@@ -70,7 +76,7 @@ def ppo_update(policy, opt, traj):
                     logits, traj["teacher"][b])
 
             loss = policy_loss + VALUE_COEF * value_loss \
-                - ENTROPY_COEF * entropy + 0.2 * imitation
+                - ENTROPY_COEF * entropy + imitation_coef * imitation
             opt.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(policy.parameters(), GRAD_CLIP)

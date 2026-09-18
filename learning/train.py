@@ -21,7 +21,7 @@ from environment.clay_world import World
 from learning.encoder import Encoder
 from learning.policy import (FlyPolicy, MLPPolicy, matched_mlp_hidden,
                              parameter_count, READOUT_ARCH)
-from learning.ppo import ppo_update
+from learning.ppo import ppo_update, IMITATION_COEF
 from learning.pretrain import warm_start
 from learning.rollout import run_episode, evaluate, SIM_STEPS
 from learning.trace import BatchTrace
@@ -52,7 +52,7 @@ CONSERVE = 0.03
 def run(curriculum, brain_device="cpu", torch_device=None,
         out_dir="results", train_mlp=False, seed0=10_000,
         val_every=5, verbose=True, use_raw_head=True, brain_data=None,
-        world_kwargs=None, ep_mult=1.0):
+        world_kwargs=None, ep_mult=1.0, imitation_final=None):
     """Shared trainer for local runs and Modal remote calls.
 
     Returns (best_val, save_path). Writes checkpoints + metrics.json
@@ -63,6 +63,13 @@ def run(curriculum, brain_device="cpu", torch_device=None,
     to be read out of the connectome. Use it for any run whose result is
     meant to support the claim that the *fly* is deciding: with the raw
     head on, a working policy is not evidence that the brain did anything.
+
+    `imitation_final` decays the teacher cross-entropy anchor linearly
+    from IMITATION_COEF to that value across all curriculum episodes
+    (episode index / total episodes). The teacher never emits IGNORE, so
+    the constant anchor pins IGNORE's probability at ~0 forever; decaying
+    it to 0.0 lets the v2 economy's kill_bonus teach the write-off.
+    None keeps the historical constant coefficient.
     """
     import json
     from pathlib import Path
@@ -84,6 +91,12 @@ def run(curriculum, brain_device="cpu", torch_device=None,
     policy = None
     encoder_gains = None
     best_encoder_gains = None
+    # Global episode count across the curriculum — the decay schedule is
+    # computed on the whole run, not per stage, so the coefficient hits
+    # `imitation_final` exactly at the last episode.
+    total_eps = sum(int(s["episodes"] * ep_mult) for s in curriculum)
+    imit_target = IMITATION_COEF if imitation_final is None \
+        else imitation_final
     for si, stage in enumerate(curriculum):
         stage = dict(stage)
         stage["episodes"] = int(stage["episodes"] * ep_mult)
@@ -134,7 +147,9 @@ def run(curriculum, brain_device="cpu", torch_device=None,
                           **(world_kwargs or {}))
             traj = run_episode(brain, trace, enc, policy, world,
                                stage["allowed"], device)
-            ppo_update(policy, opt, traj)
+            imitation_coef = IMITATION_COEF + (imit_target - IMITATION_COEF) \
+                * (ep / max(total_eps - 1, 1))
+            ppo_update(policy, opt, traj, imitation_coef)
             enc.adapt(traj["obs"].detach().cpu().numpy(),
                       traj["adv"].detach().cpu().numpy())
             ep += 1
@@ -157,8 +172,11 @@ def run(curriculum, brain_device="cpu", torch_device=None,
                 rec = {"ep": ep, "stage": si,
                        "reward": float(traj["reward"].sum()),
                        "spent": float(world.stats["spent"]), "val": float(val),
+                       "imitation": float(imitation_coef),
+                       "val_ignored": st.get("ignored", 0),
                        **{k: world.stats[k] for k in
-                          ("meetings", "closed", "spam", "replies")}}
+                          ("meetings", "closed", "spam", "replies",
+                           "ignored")}}
                 history.append(rec)
                 if verbose:
                     print(f"  ep {ep:>4}  reward {rec['reward']:>9.1f}  "
@@ -166,6 +184,8 @@ def run(curriculum, brain_device="cpu", torch_device=None,
                           f"meet {rec['meetings']}  "
                           f"closed {rec['closed']}  "
                           f"spam {rec['spam']}  "
+                          f"ign {rec['ignored']}/{rec['val_ignored']}  "
+                          f"imit {rec['imitation']:.3f}  "
                           f"val {val:>9.1f}  "
                           f"[{time.time()-t0:6.0f}s]{flag}", flush=True)
             encoder_gains = enc.gains.copy()

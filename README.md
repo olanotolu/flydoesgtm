@@ -112,21 +112,38 @@ Under the v2 economy (rent + kill bonus + universal expiry), paired 6-seed
 means: fly +32, MLP +2832, shuffled +1080, brain-only noraw −195. The MLP
 still leads; the fly at least acts (≈23 emails/world) where the v1 policy
 parked every account. The longest training run so far — `long2`, the v2
-recipe at 120 episodes — reached best_val +3728 (training-curve max,
-`remote_results_long2/metrics.json`), above the MLP arm's +2832 eval mean.
+recipe at 120 episodes — reaches statistical parity with the MLP on a
+paired 20-seed eval: +3284 vs +3119 mean return (delta +165, 95% CI
+−243…+590, p_boot 0.46, 12/20 wins — `results/eval_parity_20seed.json`).
+Nominal lead, unresolved; the honest claim is indistinguishable, not
+better. Notably the fly gets there selective (233 emails, 0 ignores)
+where the MLP spams (431 emails, 24 ignores).
 
 `IGNORE` is reachable by construction, not architecturally blocked: the
 brain-only noraw arm uses it ~84×/world. The deployed raw-head checkpoints
 never emit it, because the warm-start teacher's IGNORE branch was deleted
 (`environment/teacher.py`) and PPO carries a 0.2× imitation anchor to that
-teacher (`learning/ppo.py:67-73`) — a trained-in disposition, not a limit of
-the substrate. The asymmetry is itself a finding: with the raw-observation
-head removed the policy over-IGNOREs, so the connectome pathway carries the
-kill signal while the raw head suppresses it.
+teacher (`learning/ppo.py`). The asymmetry is itself a finding: with the
+raw-observation head removed the policy over-IGNOREs, so the connectome
+pathway carries the kill signal while the raw head suppresses it.
 
-The decisive ablation is still missing and is being run: a no-brain
-(feat=0) control — the same checkpoint with brain features zeroed, intact,
-and permuted — to isolate what the connectome pathway contributes.
+Un-anchoring is necessary but not sufficient: the `nok` arm decayed the
+imitation coefficient to zero across training (`--imitation-final`), which
+freed real GTM skill — mean return 32 → 1082, emails 26 → 123 — yet IGNORE
+still never argmaxed (p ≈ 2e-4, zero ignores in 24 eval rows). The dead
+action is an exploration dead-end baked ~8.5 logits into the readout by the
+IGNORE-less teacher warm-start; at ~1/10k sampling, PPO cannot lift it. The
+fix is teacher-side: restoring a calibrated IGNORE rule so imitation teaches
+the action rather than fighting it (`results/eval_nok_rows.json`).
+
+The no-brain ablation (`experiments/no_brain_ablation.py`, same checkpoint,
+inference-time `feat=0` vs intact vs permuted) isolates the connectome's
+contribution: on long2 the aligned brain features are worth ~+2160 vs
+feat=0 — the raw head alone degenerates into a 672-email spam cannon
+netting negative — and ~+350 vs permuted. Permuting collapses both v2 and
+noraw to the identical all-WAIT floor (−723.8): the readout uses feature
+alignment, not magnitude. Single seed (619), CPU-vs-B200 numeric drift —
+within-checkpoint deltas only (`results/no_brain_ablation.json`).
 
 ## Demo beat
 
